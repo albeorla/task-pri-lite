@@ -1,0 +1,29 @@
+# Git ignore file for project
+# This file tells Git which files to ignore when committing changes
+
+# Environment variables and secrets
+.env
+*.key
+*.pem
+*.cert
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Dependency directories
+node_modules/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build outputs
+dist/
+build/
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db

@@ -13,7 +13,7 @@ import {
   InputSource,
   ItemNature,
   DestinationType
-} from './core_interfaces';
+} from '../core/core-interfaces';
 
 /**
  * Abstract base class for input items

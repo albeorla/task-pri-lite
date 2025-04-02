@@ -1,29 +1,73 @@
-# Input Processing System
+# Task Priority Lite
 
 A system for processing various types of input (text, tasks, etc.) and routing them to appropriate destinations.
 
-## Project Organization
+## Project Setup
 
-This project is organized into the following directories:
+This project has been set up with the following components:
 
-- **src/**: Source code for the Input Processing System
-  - See [src/README.md](src/README.md) for details on the source code organization
+- GitHub CLI for repository management
+- Environment variables for secrets management
+- Git configuration to ignore sensitive files
+- TypeScript configuration for development
 
-- **docs/**: Documentation files
-  - MVP requirements and scope
-  - Design documents
-  - Implementation guidelines
-  - Rollout plans
+## Development Environment
 
-## Getting Started
+### Prerequisites
 
-To see examples of how to use the Input Processing System, check out the [implementation examples](src/examples/implementation-examples.ts) file.
+- Node.js (v20.18.0 or later)
+- npm (included with Node.js)
+- TypeScript (installed as a project dependency)
 
-## Documentation
+### Getting Started
 
-For more information about the project, see the following documentation:
+1. Clone the repository:
+   ```bash
+   gh repo clone <repository-url>
+   ```
 
-- [MVP Requirements](docs/mvp_requirements.md)
-- [MVP Scope](docs/mvp_scope.md)
-- [Manual Implementation Guidelines](docs/manual_implementation_guidelines.md)
-- [Phased Rollout Plan](docs/phased_rollout_plan.md)
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Build the project:
+   ```bash
+   npm run build
+   ```
+
+4. Run development mode with watch:
+   ```bash
+   npm run dev
+   ```
+
+## Project Structure
+
+- `src/` - Source code
+  - `abstracts/` - Abstract base classes
+  - `core/` - Core interfaces and types
+  - `examples/` - Implementation examples
+  - `handlers/` - Destination handlers
+  - `inputs/` - Input item classes
+  - `processors/` - Input processors
+  - `services/` - Orchestration services
+
+## Environment Variables
+
+Copy the `.env.example` file to `.env` and update with your actual secrets:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your actual values.
+
+## Scripts
+
+- `npm run build` - Build the TypeScript project
+- `npm run start` - Run the compiled JavaScript
+- `npm run dev` - Run TypeScript in watch mode for development
+
+## License
+
+ISC

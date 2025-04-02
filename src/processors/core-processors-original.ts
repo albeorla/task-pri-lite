@@ -6,14 +6,15 @@
 
 import { 
   BaseInputProcessor,
-  BaseProcessedItem,
+  BaseProcessedItem
+} from '../abstracts/abstract-base-classes';
+import {
   IInputItem,
   IProcessedItem,
   ItemNature,
-  DestinationType,
-  TextInputItem,
-  ManualTaskInputItem
-} from './abstract_base_classes';
+  DestinationType
+} from '../core/core-interfaces';
+import { TextInputItem, ManualTaskInputItem } from '../inputs/basic-input-items';
 
 /**
  * Processor for detecting actionable tasks in text content

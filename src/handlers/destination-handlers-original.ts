@@ -5,10 +5,12 @@
  */
 
 import { 
-  BaseDestinationHandler,
+  BaseDestinationHandler
+} from '../abstracts/abstract-base-classes';
+import {
   IProcessedItem,
   DestinationType
-} from './abstract_base_classes';
+} from '../core/core-interfaces';
 
 /**
  * Handler for tasks to be added to Todoist
@@ -264,7 +266,7 @@ export class MarkdownHandler extends BaseDestinationHandler {
     let tagsSection = '';
     if (tags.length > 0) {
       tagsSection = '### Tags\n';
-      tagsSection += tags.map(tag => `#${tag}`).join(' ') + '\n\n';
+      tagsSection += tags.map((tag: string) => `#${tag}`).join(' ') + '\n\n';
     }
     
     // Format the reference for manual saving

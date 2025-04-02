@@ -5,10 +5,12 @@
  */
 
 import { 
-  BaseInputItem,
+  BaseInputItem
+} from '../abstracts/abstract-base-classes';
+import {
   InputSource,
   ItemNature
-} from './abstract_base_classes';
+} from '../core/core-interfaces';
 
 /**
  * Input item for manual task entry
@@ -34,6 +36,14 @@ export class ManualTaskInputItem extends BaseInputItem {
       dueDate,
       priority
     });
+    this.source = InputSource.MANUAL_ENTRY;
+    this.rawContent = {
+      title,
+      description,
+      dueDate,
+      priority
+    };
+    this.timestamp = new Date();
   }
   
   /**
@@ -65,6 +75,12 @@ export class TextInputItem extends BaseInputItem {
       text,
       title
     });
+    this.source = source;
+    this.rawContent = {
+      text,
+      title
+    };
+    this.timestamp = new Date();
   }
   
   /**
@@ -146,9 +162,15 @@ export class MeetingNoteInputItem extends TextInputItem {
   ) {
     super(notes, meetingTitle, InputSource.MEETING_NOTES);
     
-    // Add additional properties to rawContent
-    this.rawContent.attendees = attendees;
-    this.rawContent.date = date;
+    // Initialize rawContent with all properties
+    this.rawContent = {
+      text: notes,
+      title: meetingTitle,
+      attendees: attendees,
+      date: date
+    };
+    this.source = InputSource.MEETING_NOTES;
+    this.timestamp = new Date();
   }
   
   /**
