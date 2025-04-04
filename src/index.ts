@@ -19,6 +19,11 @@ import {
 import { InputSource } from './core/interfaces';
 import { ManualTaskInputItem, TextInputItem } from './inputs/basic-input-items';
 import { InputProcessingOrchestrator } from './services/orchestration-services-impl';
+import { TodoistImporter } from './inputs/todoist-import';
+import { taskStore } from './storage/task-store';
+import { TimeBasedViewGenerator, TimeHorizon } from './outputs/time-based-views';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Displays the help message
@@ -34,14 +39,20 @@ Commands:
   examples           Run all examples
   manual             Create and process a manual task
   text               Process text input
+  todoist <file>     Process a Todoist export file
+  views <horizon>    Generate time-based views from processed tasks
+                     Horizons: today, tomorrow, this-work-week, this-weekend, 
+                               next-week, next-month, next-quarter, next-year
   help               Display this help message
 
 Examples:
-  npm start -- example 1     Run example 1 (manual task)
-  npm start -- examples      Run all examples
-  npm start -- manual        Create and process a manual task
-  npm start -- text          Process text input
-  npm start -- help          Display this help message
+  npm start -- example 1                Run example 1 (manual task)
+  npm start -- examples                 Run all examples
+  npm start -- manual                   Create and process a manual task
+  npm start -- text                     Process text input
+  npm start -- todoist ./export.json    Process Todoist export
+  npm start -- views today              Show tasks due today
+  npm start -- help                     Display this help message
   `);
 }
 
@@ -120,6 +131,136 @@ async function processTextInput(): Promise<void> {
 }
 
 /**
+ * Processes a Todoist export file
+ * @param filePath Path to the Todoist export file
+ */
+async function processTodoistExport(filePath: string): Promise<void> {
+  console.log(`Processing Todoist export from ${filePath}...`);
+  
+  try {
+    // Resolve the file path
+    const resolvedPath = path.resolve(process.cwd(), filePath);
+    console.log(`Reading file from: ${resolvedPath}`);
+    
+    // Check if file exists
+    if (!fs.existsSync(resolvedPath)) {
+      console.error(`File not found: ${resolvedPath}`);
+      return;
+    }
+    
+    // Read the file
+    const jsonData = fs.readFileSync(resolvedPath, 'utf8');
+    
+    // Import the data
+    const importer = new TodoistImporter(jsonData);
+    const taskItems = importer.importAsTaskItems();
+    
+    // Add tasks to store
+    let completedCount = 0;
+    let skippedCount = 0;
+    
+    taskItems.forEach(task => {
+      // Skip tasks that are already completed
+      if (task.completed) {
+        skippedCount++;
+        return;
+      }
+      
+      taskStore.addTask(task);
+      completedCount++;
+    });
+    
+    console.log(`Successfully processed ${completedCount} tasks from Todoist (${skippedCount} completed tasks skipped)`);
+    console.log(`Tasks stored in: ${path.resolve(process.cwd(), 'output/tasks.json')}`);
+    
+    // Optionally process through the orchestrator
+    // const orchestrator = new InputProcessingOrchestrator();
+    // const inputItems = importer.importTasks();
+    // for (const item of inputItems) {
+    //   await orchestrator.processAndHandle(item);
+    // }
+  } catch (error) {
+    console.error('Error processing Todoist export:', error);
+  }
+}
+
+/**
+ * Generates a time-based view of tasks
+ * @param horizonArg Time horizon argument from command line
+ */
+async function generateTimeBasedView(horizonArg: string): Promise<void> {
+  // Map command line arguments to TimeHorizon enum
+  const horizonMap: Record<string, TimeHorizon> = {
+    'today': TimeHorizon.TODAY,
+    'tomorrow': TimeHorizon.TOMORROW,
+    'this-work-week': TimeHorizon.THIS_WORK_WEEK,
+    'this-weekend': TimeHorizon.THIS_WEEKEND,
+    'next-week': TimeHorizon.NEXT_WEEK,
+    'next-month': TimeHorizon.NEXT_MONTH,
+    'next-quarter': TimeHorizon.NEXT_QUARTER,
+    'next-year': TimeHorizon.NEXT_YEAR
+  };
+  
+  // Convert input to proper format (lowercase, replace spaces with hyphens)
+  const normalizedArg = horizonArg.toLowerCase().replace(/\s+/g, '-');
+  const horizon = horizonMap[normalizedArg];
+  
+  if (!horizon) {
+    console.error(`Invalid time horizon: ${horizonArg}`);
+    console.log('Valid horizons: today, tomorrow, this-work-week, this-weekend, next-week, next-month, next-quarter, next-year');
+    return;
+  }
+  
+  console.log(`Generating ${horizon} view...`);
+  
+  // Get stored tasks
+  const tasks = taskStore.getAllTasks();
+  
+  if (tasks.length === 0) {
+    console.log('No tasks found. Import tasks using the todoist command first.');
+    return;
+  }
+  
+  // Generate the view
+  const viewGenerator = new TimeBasedViewGenerator(tasks);
+  const tasksInView = viewGenerator.generateView(horizon);
+  
+  // Display the tasks
+  console.log(`\n${horizon} (${tasksInView.length} tasks):`);
+  console.log('----------------------------------------------');
+  
+  if (tasksInView.length === 0) {
+    console.log('No tasks due in this time horizon.');
+  } else {
+    tasksInView.forEach((task, index) => {
+      const dueString = task.dueDate ? `Due: ${task.dueDate.toDateString()}` : 'No due date';
+      const projectString = task.project ? `Project: ${task.project}` : '';
+      const priorityLabels = ['Highest', 'High', 'Medium', 'Low'];
+      
+      console.log(`${index + 1}. [${priorityLabels[task.priority]}] ${task.title} - ${dueString} ${projectString}`);
+      
+      if (task.description) {
+        console.log(`   ${task.description.slice(0, 100)}${task.description.length > 100 ? '...' : ''}`);
+      }
+      
+      if (task.parentTask) {
+        console.log(`   Parent Task: ${task.parentTask}`);
+      }
+      
+      if (task.section) {
+        console.log(`   Section: ${task.section}`);
+      }
+      
+      if (task.labels && task.labels.length > 0) {
+        console.log(`   Labels: ${task.labels.join(', ')}`);
+      }
+      
+      console.log(''); // Empty line for better readability
+    });
+  }
+}
+
+/**
  * Runs a specific example by number
  * @param exampleNumber The example number to run (1-6)
  */
@@ -188,6 +329,26 @@ async function main(): Promise<void> {
     
     case 'text':
       await processTextInput();
+      break;
+    
+    case 'todoist':
+      if (args.length < 2) {
+        console.error('Missing file path');
+        displayHelp();
+        return;
+      }
+      const filePath = args[1];
+      await processTodoistExport(filePath);
+      break;
+    
+    case 'views':
+      if (args.length < 2) {
+        console.error('Missing time horizon');
+        displayHelp();
+        return;
+      }
+      const horizon = args[1];
+      await generateTimeBasedView(horizon);
       break;
     
     case 'help':
