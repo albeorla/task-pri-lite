@@ -24,42 +24,79 @@ This system addresses the common challenge of managing information overload by:
 
 ### High-Level Architecture
 
+The system follows a clean architecture approach with distinct layers:
+
 ```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Raw Input  │────▶│  Input Items    │────▶│  Input Processors │────▶│ Processed Items │
-└─────────────┘     └─────────────────┘     └──────────────────┘     └─────────────────┘
-                                                                              │
-                                                                              ▼
-                    ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-                    │    Actions      │◀────│ Destination      │◀────│ Output Handling │
-                    │                 │     │ Handlers         │     │ Service         │
-                    └─────────────────┘     └──────────────────┘     └─────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  PRESENTATION LAYER                                                         │
+│  ┌───────────────┐     ┌───────────────┐                                    │
+│  │     CLI       │     │     API       │                                    │
+│  └───────────────┘     └───────────────┘                                    │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  APPLICATION LAYER                                                          │
+│  ┌───────────────┐     ┌───────────────┐     ┌───────────────┐             │
+│  │  Processors   │     │   Managers    │     │   Services    │             │
+│  └───────────────┘     └───────────────┘     └───────────────┘             │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  CORE LAYER                                                                 │
+│  ┌───────────────┐     ┌───────────────┐     ┌───────────────┐             │
+│  │  Interfaces   │     │    Models     │     │    Types      │             │
+│  └───────────────┘     └───────────────┘     └───────────────┘             │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  INFRASTRUCTURE LAYER                                                       │
+│  ┌───────────────┐     ┌───────────────┐     ┌───────────────┐             │
+│  │    Storage    │     │   Services    │     │   Adapters    │             │
+│  └───────────────┘     └───────────────┘     └───────────────┘             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Components
 
-1.  **Input Items**: Encapsulate raw input data with source information (`IInputItem`).
-2.  **Input Processors**: Analyze and categorize input items (`IInputProcessor`).
-3.  **Processed Items**: Contain the results of processing with extracted data (`IProcessedItem`).
-4.  **Output Handling Service**: Routes processed items to appropriate handlers.
-5.  **Destination Handlers**: Format and handle processed items for specific destinations (`IDestinationHandler`).
-6.  **Orchestration Service**: Coordinates the entire process (`InputProcessingService`, `OutputHandlingService`, `InputProcessingOrchestrator`).
+1. **Core Layer**: Contains the domain model and business rules
+   - **Interfaces**: Core interfaces (`IInputItem`, `IProcessedItem`, `IInputProcessor`, `IDestinationHandler`, `IStorageService`)
+   - **Models**: Domain entities (`Task`, `Project`)
+   - **Types**: Shared type definitions and enumerations (`TaskStatus`, `EisenhowerQuadrant`, `InputSource`, `ItemNature`, `DestinationType`)
 
-### Design Principles (SOLID)
+2. **Application Layer**: Contains the business logic and use cases
+   - **Processors**: Business logic for processing tasks (`GTDClarificationProcessor`, `EisenhowerPrioritizer`)
+   - **Managers**: Coordination of domain objects (`TaskManager`)
+   - **Services**: Application-specific services (`InputProcessingService`, `OutputHandlingService`)
 
-The system is built on SOLID principles, ensuring:
+3. **Infrastructure Layer**: Contains external system implementations
+   - **Storage**: Data persistence mechanisms (`FileStorageService`)
+   - **Services**: External service implementations (`LangChainLLMService`)
+   - **Adapters**: Adapters for external systems and APIs
 
--   **Single Responsibility**: Each component has one specific job.
--   **Open/Closed**: Extensible without modifying existing code.
--   **Liskov Substitution**: Implementations are substitutable for their interfaces.
--   **Interface Segregation**: Focused interfaces for specific purposes.
--   **Dependency Inversion**: High-level modules depend on abstractions.
+4. **Presentation Layer**: Contains user interface implementations
+   - **CLI**: Command-line interface implementations
+   - **API**: REST API and other API interfaces
 
-### Design Patterns Used
+### Design Principles
 
--   **Strategy Pattern**: Used for Input Processors and Destination Handlers, allowing different algorithms to be selected at runtime.
--   **Chain of Responsibility**: Used for processor and handler selection, passing requests along a chain until handled.
--   **Factory Pattern (implied)**: Used for the creation/selection of appropriate handlers based on the processed item type.
+The system follows the principles of clean architecture:
+
+- **Independence of Frameworks**: The core business logic does not depend on external frameworks.
+- **Testability**: Each layer can be tested independently.
+- **Independence of UI**: The UI can be changed without changing the business rules.
+- **Independence of Database**: The database can be changed without changing the business rules.
+- **Independence of External Agencies**: The business rules do not know anything about external interfaces.
+
+### Dependency Flow
+
+Dependencies flow inward, with the core layer at the center having no external dependencies:
+
+- Presentation depends on Application
+- Application depends on Core
+- Infrastructure depends on Core
+- Core has no dependencies on other layers
 
 ## 3. Requirements / Core Functionality
 
@@ -87,28 +124,51 @@ The system relies on key interfaces like `IInputItem`, `IProcessedItem`, `IInput
 
 ### MVP Definition
 
-The Minimum Viable Product (MVP) focuses on establishing the core framework and enabling essential workflows, initially relying on manual steps for certain actions, with a clear design for future automation.
+The Minimum Viable Product (MVP) focuses on establishing the clean architecture framework and enabling essential workflows, initially relying on manual steps for certain actions, with a clear design for future automation.
 
 ### P0 (MVP) Components Summary
 
--   **Core Interfaces & Abstractions**: `IInputItem`, `IProcessedItem`, `IInputProcessor`, `IDestinationHandler`, base classes, and orchestration services.
--   **Basic Input Items**: `ManualTaskInputItem` and `TextInputItem`.
--   **Core Processors**: `TaskDetectionProcessor`, `EventDetectionProcessor`, `ReferenceInfoProcessor`, `DefaultProcessor`.
--   **Core Handlers**: `TodoistHandler` (manual output), `CalendarHandler` (semi-automated via AI tool), `MarkdownHandler` (manual output), `ReviewLaterHandler`.
+1. **Core Layer**:
+   - **Interfaces**: Core interfaces for input, processing, output, and storage
+   - **Models**: Domain models (Task, Project) with proper encapsulation
+   - **Types**: Type definitions and enumerations for domain concepts
+
+2. **Application Layer**:
+   - **Processors**: GTD clarification processor and Eisenhower prioritizer
+   - **Managers**: Task manager for coordinating task operations
+   - **Services**: Input processing and output handling services
+
+3. **Infrastructure Layer**:
+   - **Storage**: File-based storage service
+   - **Services**: LLM service for AI-assisted processing
+   - **Adapters**: Integration points for external systems
+
+4. **Presentation Layer**:
+   - **CLI**: Command-line interface for user interaction
+   - **API**: Basic API structure (to be implemented)
 
 ### Manual vs. Automated Components (MVP)
 
--   **Manual**: Input capture (initially), adding tasks to Todoist, saving reference info to Markdown.
--   **Semi-Automated**: Creating calendar events (requires user confirmation before using AI tool).
--   **Fully Automated**: Input processing logic, processor/handler selection, output formatting.
+-   **Manual**: Input capture (initially), some task processing steps
+-   **Semi-Automated**: Task clarification and prioritization using LLM services
+-   **Fully Automated**: File storage, core task processing logic
+
+### Implementation Progress
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Core Layer | ✅ Complete | Interfaces, models, and types implemented |
+| Application Layer | ✅ Complete | Task processing logic implemented |
+| Infrastructure Layer | ✅ Complete | Storage and LLM services implemented |
+| Presentation Layer | 🔄 In Progress | CLI implementation in progress, API planned |
 
 ### Manual Steps Required for MVP
 
-1.  **Input Capture**: User provides input details (e.g., manually enters task info or text for processing).
-2.  **Todoist Task Creation**: System displays formatted task details; user manually adds the task to Todoist.
-3.  **Markdown Note Saving**: System displays formatted reference info; user manually saves it to their Markdown notes system.
-4.  **Calendar Event Confirmation**: System displays formatted event details; user confirms before the system attempts to create it using an available tool.
-5.  **Review Unclear Items**: System displays items it couldn't classify; user manually reviews and decides on action.
+1. **Input Capture**: User provides input details (e.g., manually enters task info or text for processing)
+2. **GTD Processing**: System assists with GTD clarification using LLM service; user provides manual input when needed
+3. **Prioritization**: System helps prioritize tasks using Eisenhower matrix; user reviews and confirms
+4. **Task Review**: User reviews processed tasks and makes adjustments as needed
+5. **File Management**: System handles file storage automatically; user can review stored files
 
 ## 5. Rollout Plan
 
@@ -143,23 +203,77 @@ Week 13+:   Phase 5 - Learning & Optimization (Ongoing)
 
 ## 6. Extensibility
 
-The Input Processing System is designed with extensibility in mind, following SOLID principles. Key extension points allow for customization and enhancement without modifying existing core code. This includes:
+The system is designed with extensibility in mind, following clean architecture principles. Each layer has well-defined extension points:
 
--   Adding new **Input Sources** (e.g., Jira, Trello)
--   Creating custom **Input Processors** (e.g., NLP-based, ML-based)
--   Adding new **Destination Types** (e.g., Jira, GitHub, Slack)
--   Creating custom **Destination Handlers** (e.g., direct API integrations)
--   Adding new **Item Nature** types for classification
--   Customizing the **Orchestration** logic
+### Core Layer Extensions
+
+- **New Domain Models**: Add new domain entities alongside Task and Project
+- **Additional Interfaces**: Extend existing interfaces or add new ones as needed
+- **Additional Type Definitions**: Define new enums or types for domain concepts
+
+### Application Layer Extensions
+
+- **Additional Processors**: Create new task processors for specialized workflows
+- **Additional Managers**: Create managers for new domain entities
+- **Enhanced Services**: Extend existing services or add new orchestration services
+
+### Infrastructure Layer Extensions
+
+- **Alternative Storage**: Implement different storage mechanisms (e.g., database, cloud storage)
+- **Additional Services**: Add new external service integrations (e.g., different LLM providers)
+- **New Adapters**: Create adapters for integrating with other systems and APIs
+
+### Presentation Layer Extensions
+
+- **Web Interface**: Add a web-based user interface
+- **Mobile App**: Create mobile application interfaces
+- **Enhanced CLI**: Add more advanced command-line features
+- **API Enhancements**: Add additional API endpoints and capabilities
+
+### Cross-Cutting Extensions
+
+- **Logging Framework**: Add comprehensive logging across all layers
+- **Telemetry**: Add usage analytics and performance monitoring
+- **Authentication/Authorization**: Add security controls for multi-user environments
+
+The clean architecture ensures that extensions in one layer don't require changes to other layers, maintaining system stability while allowing for growth.
 
 ## 7. Future Considerations / Potential Improvements
 
 Beyond the MVP and planned rollout phases, potential future enhancements include:
 
--   **Enhanced Error Handling**: More sophisticated error handling with custom error types and recovery strategies.
--   **Logging System**: A comprehensive logging system to track processing flow and aid in debugging.
--   **Configuration System**: A flexible configuration system to adjust processor and handler behavior without code changes.
--   **Performance Optimization**: Further optimization for handling large volumes of input.
--   **Testing Framework**: Comprehensive unit and integration tests.
--   **Direct API Integrations**: Expand direct integrations beyond Todoist and Calendar (e.g., project management tools, note-taking apps).
--   **Machine Learning**: Implement user preference learning and predictive processing. 
+### Core Layer Improvements
+
+- **Richer Domain Model**: Enhance the domain model with additional entities and relationships
+- **Version Management**: Add versioning capability to domain models
+- **Event System**: Implement domain events for better decoupling
+
+### Application Layer Improvements
+
+- **Machine Learning Integration**: Enhance processors with ML capabilities for better task classification
+- **Workflow Engine**: Add a configurable workflow engine for more flexible processing pipelines
+- **Rules Engine**: Implement a business rules engine for complex decision making
+
+### Infrastructure Layer Improvements
+
+- **Database Integration**: Move from file-based storage to a proper database solution
+- **Cloud Storage Support**: Add support for cloud storage providers
+- **Enhanced LLM Integration**: Support for more advanced LLM capabilities and models
+- **Caching Layer**: Add caching for improved performance
+
+### Presentation Layer Improvements
+
+- **Web Dashboard**: Create a comprehensive web dashboard for system management
+- **Mobile Applications**: Develop dedicated mobile applications
+- **Notifications System**: Implement push notifications for important events
+- **Advanced Visualization**: Add data visualization for task and project metrics
+
+### Cross-Cutting Improvements
+
+- **Comprehensive Logging**: Enhanced logging with structured logs and search capabilities
+- **Monitoring & Alerts**: Add monitoring and alerting for system health and performance
+- **User Management**: Multi-user support with role-based access control
+- **Backup & Recovery**: Advanced backup and recovery mechanisms
+- **Audit Trail**: Track all changes for compliance and debugging purposes
+
+Each of these improvements can be implemented incrementally while maintaining the clean architecture principles, ensuring the system remains maintainable and extensible. 
