@@ -1,0 +1,100 @@
+---
+config:
+  theme: mc
+  look: classic
+  layout: dagre
+---
+flowchart TD
+ subgraph subGraph0["Input Phase"]
+    direction TB
+        B[/"Create IInputItem \n e.g., TextInputItem"/]
+        A["Start: Raw Input Received"]
+        C["InputProcessingOrchestrator starts"]
+  end
+ subgraph subGraph1["Processing Phase"]
+    direction TB
+        E{"Processor canProcess InputItem?"}
+        D["IPS: Find First Processor \n e.g., TaskDetectionProcessor"]
+        F["IPS: Find Next Processor \n Iterate until one fits or Default"]
+        G["Processor.process InputItem"]
+        H[/"IProcessedItem Created \n with DeterminedNature, \n SuggestedDestination, \n ExtractedData"/]
+  end
+ subgraph subGraph2["Handler Actions"]
+    direction TB
+        M["TodoistHandler: \n Format Task Output"]
+        L{"Destination Type?"}
+        N["User Manually Adds to Todoist"]
+        O["CalendarHandler: \n Format Event Output"]
+        P{"Confirm Event Creation?"}
+        Q["CalendarHandler: \n Use AI/Tool to Create Event"]
+        Z(("End"))
+        R["MarkdownHandler: \n Format Reference Output"]
+        S["User Manually Saves to Markdown"]
+        T["ReviewLaterHandler: \n Format for Review"]
+        U["User Manually Reviews Item"]
+        V["TrashHandler: \n Log Item Ignored"]
+  end
+ subgraph subGraph3["Handling Phase"]
+    direction TB
+        J{"Handler canHandle ProcessedItem?"}
+        I["OHS: Find First Handler \n e.g., TodoistHandler"]
+        K["OHS: Find Next Handler \n Iterate until one fits"]
+        subGraph2
+  end
+    A --> B
+    B --> C
+    D --> E
+    E -- No --> F
+    F --> E
+    E -- Yes --> G
+    G --> H
+    I --> J
+    J -- No --> K
+    K --> J
+    J -- Yes --> L
+    L -- TODOIST --> M
+    M --> N
+    L -- CALENDAR --> O
+    O --> P
+    P -- Yes --> Q
+    P -- No ----> Z
+    L -- MARKDOWN --> R
+    R --> S
+    L -- REVIEW_LATER --> T
+    T --> U
+    L -- NONE --> V
+    N --> Z
+    Q --> Z
+    S --> Z
+    U --> Z
+    V --> Z
+    C --> D
+    H --> I
+     B:::io
+     A:::endpoint
+     C:::process
+     E:::decision
+     D:::process
+     F:::process
+     G:::process
+     H:::io
+     M:::process
+     L:::decision
+     N:::manual
+     O:::process
+     P:::decision
+     Q:::process
+     Z:::endpoint
+     R:::process
+     S:::manual
+     T:::process
+     U:::manual
+     V:::process
+     J:::decision
+     I:::process
+     K:::process
+    classDef process fill:#e0f2fe,stroke:#7aa2f7,stroke-width:1px
+    classDef decision fill:#fef9c3,stroke:#facc15,stroke-width:1px
+    classDef io fill:#dcfce7,stroke:#4ade80,stroke-width:1px
+    classDef manual fill:#fee2e2,stroke:#f87171,stroke-width:1px
+    classDef endpoint fill:#e0e7ff,stroke:#818cf8,stroke-width:1.5px
