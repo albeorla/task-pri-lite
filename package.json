@@ -28,6 +28,10 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "uuid": "^11.1.0"
+    "@langchain/core": "^0.3.43",
+    "@langchain/openai": "^0.5.4",
+    "dotenv": "^16.4.7",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
   }
 }
