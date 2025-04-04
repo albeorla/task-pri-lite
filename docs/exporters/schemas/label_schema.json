@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Label",
+  "description": "A Todoist label",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Label ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Label name"
+    },
+    "color": {
+      "type": "string",
+      "description": "The color of the label"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Label position"
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "description": "Whether the label is a favorite"
+    },
+    "is_shared": {
+      "type": "boolean",
+      "description": "Whether the label is shared or personal (derived property)"
+    }
+  },
+  "required": ["id", "name"]
+}

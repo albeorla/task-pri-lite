@@ -1,0 +1,361 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Todoist Denormalized Data Model",
+  "description": "A comprehensive denormalized data model for Todoist showing relationships between projects, sections, tasks, comments, and labels",
+  "type": "object",
+  "properties": {
+    "projects": {
+      "type": "array",
+      "description": "List of all projects",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Project ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name"
+          },
+          "color": {
+            "type": "string",
+            "description": "The color of the project icon"
+          },
+          "parent_id": {
+            "type": ["string", "null"],
+            "description": "ID of parent project (null for top-level projects)"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Project position under the same parent (read-only, will be 0 for inbox and team inbox projects)"
+          },
+          "comment_count": {
+            "type": "integer",
+            "description": "Number of project comments"
+          },
+          "is_shared": {
+            "type": "boolean",
+            "description": "Whether the project is shared (read-only)"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "description": "Whether the project is a favorite"
+          },
+          "is_inbox_project": {
+            "type": "boolean",
+            "description": "Whether the project is the user's Inbox (read-only)"
+          },
+          "is_team_inbox": {
+            "type": "boolean",
+            "description": "Whether the project is the Team Inbox (read-only)"
+          },
+          "view_style": {
+            "type": "string",
+            "enum": ["list", "board"],
+            "description": "A string value representing the project view style"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL to access the project in the Todoist web app"
+          },
+          "sections": {
+            "type": "array",
+            "description": "Sections within this project",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Section ID"
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "ID of the project section belongs to"
+                },
+                "order": {
+                  "type": "integer",
+                  "description": "Section position among other sections from the same project"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Section name"
+                },
+                "tasks": {
+                  "type": "array",
+                  "description": "Tasks within this section",
+                  "items": {
+                    "$ref": "#/definitions/task"
+                  }
+                }
+              },
+              "required": ["id", "project_id", "name"]
+            }
+          },
+          "tasks": {
+            "type": "array",
+            "description": "Top-level tasks directly under this project (not in any section)",
+            "items": {
+              "$ref": "#/definitions/task"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "description": "Comments on this project",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Comment ID"
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "Comment's project ID"
+                },
+                "posted_at": {
+                  "type": "string",
+                  "description": "Date and time when comment was added in RFC3339 format in UTC"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Comment content. May contain markdown-formatted text and hyperlinks"
+                },
+                "attachment": {
+                  "type": ["object", "null"],
+                  "description": "Attachment file (null if there is no attachment)",
+                  "properties": {
+                    "file_name": {
+                      "type": "string",
+                      "description": "Name of the attached file"
+                    },
+                    "file_type": {
+                      "type": "string",
+                      "description": "MIME type of the attached file"
+                    },
+                    "file_url": {
+                      "type": "string",
+                      "description": "URL to download the attached file"
+                    },
+                    "resource_type": {
+                      "type": "string",
+                      "description": "Type of the attachment resource"
+                    }
+                  }
+                }
+              },
+              "required": ["id", "project_id", "content", "posted_at"]
+            }
+          }
+        },
+        "required": ["id", "name"]
+      }
+    },
+    "labels": {
+      "type": "array",
+      "description": "List of all labels",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Label ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Label name"
+          },
+          "color": {
+            "type": "string",
+            "description": "The color of the label"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Label position"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "description": "Whether the label is a favorite"
+          },
+          "is_shared": {
+            "type": "boolean",
+            "description": "Whether the label is shared or personal"
+          }
+        },
+        "required": ["id", "name"]
+      }
+    }
+  },
+  "definitions": {
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Task ID"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "Task's project ID (read-only)"
+        },
+        "section_id": {
+          "type": ["string", "null"],
+          "description": "ID of section task belongs to (read-only, null when the task has no parent section)"
+        },
+        "content": {
+          "type": "string",
+          "description": "Task content. May contain markdown-formatted text and hyperlinks"
+        },
+        "description": {
+          "type": "string",
+          "description": "A description for the task. May contain markdown-formatted text and hyperlinks"
+        },
+        "is_completed": {
+          "type": "boolean",
+          "description": "Flag to mark completed tasks"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The task's labels (a list of names that may represent either personal or shared labels)"
+        },
+        "parent_id": {
+          "type": ["string", "null"],
+          "description": "ID of parent task (read-only, null for top-level tasks)"
+        },
+        "order": {
+          "type": "integer",
+          "description": "Position under the same parent or project for top-level tasks (read-only)"
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Task priority (1-4, 4 is highest)"
+        },
+        "due": {
+          "type": ["object", "null"],
+          "description": "Task due date/time",
+          "properties": {
+            "date": {
+              "type": "string",
+              "description": "Due date in YYYY-MM-DD format"
+            },
+            "is_recurring": {
+              "type": "boolean",
+              "description": "Whether the task has a recurring due date"
+            },
+            "datetime": {
+              "type": ["string", "null"],
+              "description": "Due date and time in RFC3339 format"
+            },
+            "string": {
+              "type": "string",
+              "description": "Human-defined date in free form text"
+            },
+            "timezone": {
+              "type": ["string", "null"],
+              "description": "Timezone for the due date"
+            }
+          }
+        },
+        "url": {
+          "type": "string",
+          "description": "URL to access the task in the Todoist web app"
+        },
+        "comment_count": {
+          "type": "integer",
+          "description": "Number of task comments"
+        },
+        "creator_id": {
+          "type": "string",
+          "description": "ID of user who created the task"
+        },
+        "created_at": {
+          "type": "string",
+          "description": "Date and time when task was created in RFC3339 format"
+        },
+        "assignee_id": {
+          "type": ["string", "null"],
+          "description": "ID of user assigned to the task"
+        },
+        "assigner_id": {
+          "type": ["string", "null"],
+          "description": "ID of user who assigned the task"
+        },
+        "duration": {
+          "type": ["object", "null"],
+          "description": "Task duration",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "description": "Duration amount"
+            },
+            "unit": {
+              "type": "string",
+              "enum": ["minute", "day"],
+              "description": "Duration unit"
+            }
+          }
+        },
+        "comments": {
+          "type": "array",
+          "description": "Comments on this task",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Comment ID"
+              },
+              "task_id": {
+                "type": "string",
+                "description": "Comment's task ID"
+              },
+              "posted_at": {
+                "type": "string",
+                "description": "Date and time when comment was added in RFC3339 format in UTC"
+              },
+              "content": {
+                "type": "string",
+                "description": "Comment content. May contain markdown-formatted text and hyperlinks"
+              },
+              "attachment": {
+                "type": ["object", "null"],
+                "description": "Attachment file (null if there is no attachment)",
+                "properties": {
+                  "file_name": {
+                    "type": "string",
+                    "description": "Name of the attached file"
+                  },
+                  "file_type": {
+                    "type": "string",
+                    "description": "MIME type of the attached file"
+                  },
+                  "file_url": {
+                    "type": "string",
+                    "description": "URL to download the attached file"
+                  },
+                  "resource_type": {
+                    "type": "string",
+                    "description": "Type of the attachment resource"
+                  }
+                }
+              }
+            },
+            "required": ["id", "task_id", "content", "posted_at"]
+          }
+        },
+        "sub_tasks": {
+          "type": "array",
+          "description": "Child tasks (sub-tasks) of this task",
+          "items": {
+            "$ref": "#/definitions/task"
+          }
+        }
+      },
+      "required": ["id", "content"]
+    }
+  },
+  "required": ["projects", "labels"]
+}

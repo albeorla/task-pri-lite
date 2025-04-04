@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project",
+  "description": "A Todoist project",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Project ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Project name"
+    },
+    "color": {
+      "type": "string",
+      "description": "The color of the project icon"
+    },
+    "parent_id": {
+      "type": ["string", "null"],
+      "description": "ID of parent project (null for top-level projects)"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Project position under the same parent (read-only, will be 0 for inbox and team inbox projects)"
+    },
+    "comment_count": {
+      "type": "integer",
+      "description": "Number of project comments"
+    },
+    "is_shared": {
+      "type": "boolean",
+      "description": "Whether the project is shared (read-only)"
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "description": "Whether the project is a favorite"
+    },
+    "is_inbox_project": {
+      "type": "boolean",
+      "description": "Whether the project is the user's Inbox (read-only)"
+    },
+    "is_team_inbox": {
+      "type": "boolean",
+      "description": "Whether the project is the Team Inbox (read-only)"
+    },
+    "view_style": {
+      "type": "string",
+      "enum": ["list", "board"],
+      "description": "A string value representing the project view style"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to access the project in the Todoist web app"
+    }
+  },
+  "required": ["id", "name"]
+}

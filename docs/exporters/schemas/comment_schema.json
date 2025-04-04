@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Comment",
+  "description": "A Todoist comment on a task or project",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Comment ID"
+    },
+    "task_id": {
+      "type": ["string", "null"],
+      "description": "Comment's task ID (null if the comment belongs to a project)"
+    },
+    "project_id": {
+      "type": ["string", "null"],
+      "description": "Comment's project ID (null if the comment belongs to a task)"
+    },
+    "posted_at": {
+      "type": "string",
+      "description": "Date and time when comment was added in RFC3339 format in UTC"
+    },
+    "content": {
+      "type": "string",
+      "description": "Comment content. May contain markdown-formatted text and hyperlinks"
+    },
+    "attachment": {
+      "type": ["object", "null"],
+      "description": "Attachment file (null if there is no attachment)",
+      "properties": {
+        "file_name": {
+          "type": "string",
+          "description": "Name of the attached file"
+        },
+        "file_type": {
+          "type": "string",
+          "description": "MIME type of the attached file"
+        },
+        "file_url": {
+          "type": "string",
+          "description": "URL to download the attached file"
+        },
+        "resource_type": {
+          "type": "string",
+          "description": "Type of the attachment resource"
+        }
+      }
+    }
+  },
+  "required": ["id", "content", "posted_at"],
+  "oneOf": [
+    {
+      "required": ["task_id"]
+    },
+    {
+      "required": ["project_id"]
+    }
+  ]
+}

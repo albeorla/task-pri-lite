@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task",
+  "description": "A Todoist task",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Task ID"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Task's project ID (read-only)"
+    },
+    "section_id": {
+      "type": ["string", "null"],
+      "description": "ID of section task belongs to (read-only, null when the task has no parent section)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Task content. May contain markdown-formatted text and hyperlinks"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description for the task. May contain markdown-formatted text and hyperlinks"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "description": "Flag to mark completed tasks"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The task's labels (a list of names that may represent either personal or shared labels)"
+    },
+    "parent_id": {
+      "type": ["string", "null"],
+      "description": "ID of parent task (read-only, null for top-level tasks)"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Position under the same parent or project for top-level tasks (read-only)"
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Task priority (1-4, 4 is highest)"
+    },
+    "due": {
+      "type": ["object", "null"],
+      "description": "Task due date/time",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Due date in YYYY-MM-DD format"
+        },
+        "is_recurring": {
+          "type": "boolean",
+          "description": "Whether the task has a recurring due date"
+        },
+        "datetime": {
+          "type": ["string", "null"],
+          "description": "Due date and time in RFC3339 format"
+        },
+        "string": {
+          "type": "string",
+          "description": "Human-defined date in free form text"
+        },
+        "timezone": {
+          "type": ["string", "null"],
+          "description": "Timezone for the due date"
+        }
+      }
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to access the task in the Todoist web app"
+    },
+    "comment_count": {
+      "type": "integer",
+      "description": "Number of task comments"
+    },
+    "creator_id": {
+      "type": "string",
+      "description": "ID of user who created the task"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Date and time when task was created in RFC3339 format"
+    },
+    "assignee_id": {
+      "type": ["string", "null"],
+      "description": "ID of user assigned to the task"
+    },
+    "assigner_id": {
+      "type": ["string", "null"],
+      "description": "ID of user who assigned the task"
+    },
+    "duration": {
+      "type": ["object", "null"],
+      "description": "Task duration",
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "description": "Duration amount"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["minute", "day"],
+          "description": "Duration unit"
+        }
+      }
+    }
+  },
+  "required": ["id", "content"]
+}

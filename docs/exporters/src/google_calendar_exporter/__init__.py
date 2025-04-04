@@ -1,0 +1,1 @@
+"""Google Calendar exporter module."""
