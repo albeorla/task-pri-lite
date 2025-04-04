@@ -1,10 +1,10 @@
 /**
  * Core Input Processors for Input Processing System
- * 
+ *
  * This file implements the core input processors that are part of the MVP.
  */
 
-import { 
+import {
   IInputItem,
   IProcessedItem,
   ItemNature,
@@ -19,7 +19,7 @@ import {
 import {
   TextInputItem,
   ManualTaskInputItem
-} from '../inputs/basic-items';
+} from '../inputs/basic-input-items';
 
 /**
  * Processor for detecting actionable tasks in text content
@@ -36,16 +36,16 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
     if (input instanceof TextInputItem) {
       return true;
     }
-    
+
     // Can also process ManualTaskInputItem, but it's usually pre-classified
     if (input instanceof ManualTaskInputItem) {
       return true;
     }
-    
+
     // For other input types, check if the potential nature is ACTIONABLE_TASK
     return input.getPotentialNature() === ItemNature.ACTIONABLE_TASK;
   }
-  
+
   /**
    * Processes the input item to extract task information
    * @param input The input item to process
@@ -66,23 +66,23 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
         }
       );
     }
-    
+
     // For TextInputItem, we need to extract task information
     if (input instanceof TextInputItem) {
       const text = input.text;
-      
+
       // Extract title (first line or first sentence)
       const title = this.extractTitle(text);
-      
+
       // Extract due date if present
       const dueDate = this.extractDueDate(text);
-      
+
       // Extract priority if present
       const priority = this.extractPriority(text);
-      
+
       // Use the rest as description
       const description = this.extractDescription(text, title);
-      
+
       return new BaseProcessedItem(
         input,
         ItemNature.ACTIONABLE_TASK,
@@ -95,7 +95,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
         }
       );
     }
-    
+
     // For other input types, create a generic task
     return new BaseProcessedItem(
       input,
@@ -109,7 +109,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       }
     );
   }
-  
+
   /**
    * Extracts the title from text content
    * @param text The text to extract from
@@ -121,17 +121,17 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
-    
+
     // If first line is too long, try to get the first sentence
     const firstSentence = text.split(/[.!?]/)[0].trim();
     if (firstSentence && firstSentence.length <= 100) {
       return firstSentence;
     }
-    
+
     // If all else fails, truncate the text
     return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
   }
-  
+
   /**
    * Extracts the due date from text content
    * @param text The text to extract from
@@ -153,7 +153,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       // "by Friday"
       /by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
     ];
-    
+
     for (const pattern of datePatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
@@ -164,13 +164,13 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
             tomorrow.setDate(tomorrow.getDate() + 1);
             return tomorrow;
           }
-          
+
           if (match[1].toLowerCase() === 'next week') {
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + 7);
             return nextWeek;
           }
-          
+
           // For day names, calculate the next occurrence
           const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
           const dayIndex = dayNames.indexOf(match[1].toLowerCase());
@@ -182,7 +182,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
             nextDay.setDate(today.getDate() + (daysUntil === 0 ? 7 : daysUntil));
             return nextDay;
           }
-          
+
           // For explicit dates, parse them
           return new Date(match[1]);
         } catch (e) {
@@ -191,10 +191,10 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
         }
       }
     }
-    
+
     return null;
   }
-  
+
   /**
    * Extracts the priority from text content
    * @param text The text to extract from
@@ -218,7 +218,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       // "p1", "p2", "p3", "p4"
       { pattern: /\b(p[1-4])\b/i, value: 0 }
     ];
-    
+
     for (const { pattern, value } of priorityPatterns) {
       const match = text.match(pattern);
       if (match) {
@@ -229,15 +229,15 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
             return priorityNumber;
           }
         }
-        
+
         return value;
       }
     }
-    
+
     // Default priority is 4 (lowest)
     return 4;
   }
-  
+
   /**
    * Extracts the description from text content
    * @param text The text to extract from
@@ -249,11 +249,11 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
     let description = text;
     if (text.startsWith(title)) {
       description = text.substring(title.length).trim();
-      
+
       // Remove any leading punctuation
       description = description.replace(/^[.!?:;,\s]+/, '');
     }
-    
+
     return description;
   }
 }
@@ -273,11 +273,11 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     if (input instanceof TextInputItem) {
       return true;
     }
-    
+
     // For other input types, check if the potential nature is POTENTIAL_EVENT
     return input.getPotentialNature() === ItemNature.POTENTIAL_EVENT;
   }
-  
+
   /**
    * Processes the input item to extract event information
    * @param input The input item to process
@@ -287,25 +287,25 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     // For TextInputItem, we need to extract event information
     if (input instanceof TextInputItem) {
       const text = input.text;
-      
+
       // Extract title (first line or first sentence)
       const title = this.extractTitle(text);
-      
+
       // Extract start date/time if present
       const startDateTime = this.extractStartDateTime(text);
-      
+
       // Extract end date/time if present
       const endDateTime = this.extractEndDateTime(text, startDateTime);
-      
+
       // Extract location if present
       const location = this.extractLocation(text);
-      
+
       // Extract attendees if present
       const attendees = this.extractAttendees(text);
-      
+
       // Use the rest as description
       const description = this.extractDescription(text, title);
-      
+
       // Only classify as an event if we have at least a start date/time
       if (startDateTime) {
         return new BaseProcessedItem(
@@ -323,7 +323,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
         );
       }
     }
-    
+
     // If we couldn't extract event information or it's not a TextInputItem,
     // return a processed item with UNCLEAR nature
     return new BaseProcessedItem(
@@ -335,7 +335,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       }
     );
   }
-  
+
   /**
    * Extracts the title from text content
    * @param text The text to extract from
@@ -347,17 +347,17 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
-    
+
     // If first line is too long, try to get the first sentence
     const firstSentence = text.split(/[.!?]/)[0].trim();
     if (firstSentence && firstSentence.length <= 100) {
       return firstSentence;
     }
-    
+
     // If all else fails, truncate the text
     return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
   }
-  
+
   /**
    * Extracts the start date/time from text content
    * @param text The text to extract from
@@ -377,7 +377,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "at 2:30 PM"
       /at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i
     ];
-    
+
     for (const pattern of dateTimePatterns) {
       const match = text.match(pattern);
       if (match) {
@@ -387,24 +387,24 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             // Pattern with date and time
             const dateStr = match[1];
             const timeStr = match[2];
-            
+
             // Try to parse the date
             const date = new Date(dateStr);
-            
+
             // Try to parse the time
             const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
               let hours = parseInt(timeParts[1]);
               const minutes = parseInt(timeParts[2]);
               const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
-              
+
               // Adjust hours for AM/PM
               if (ampm === 'pm' && hours < 12) {
                 hours += 12;
               } else if (ampm === 'am' && hours === 12) {
                 hours = 0;
               }
-              
+
               date.setHours(hours, minutes, 0, 0);
               return date;
             }
@@ -416,21 +416,21 @@ export class EventDetectionProcessor extends BaseInputProcessor {
           } else if (match[1] && /^\d{1,2}:\d{2}/.test(match[1])) {
             // Time-only pattern, assume today
             const today = new Date();
-            
+
             // Try to parse the time
             const timeParts = match[1].match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
               let hours = parseInt(timeParts[1]);
               const minutes = parseInt(timeParts[2]);
               const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
-              
+
               // Adjust hours for AM/PM
               if (ampm === 'pm' && hours < 12) {
                 hours += 12;
               } else if (ampm === 'am' && hours === 12) {
                 hours = 0;
               }
-              
+
               today.setHours(hours, minutes, 0, 0);
               return today;
             }
@@ -441,10 +441,10 @@ export class EventDetectionProcessor extends BaseInputProcessor {
         }
       }
     }
-    
+
     return null;
   }
-  
+
   /**
    * Extracts the end date/time from text content
    * @param text The text to extract from
@@ -455,7 +455,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     if (!startDateTime) {
       return null;
     }
-    
+
     // Look for common end time patterns
     const endTimePatterns = [
       // "ends at 3:30 PM"
@@ -465,7 +465,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "from 2:30 PM to 3:30 PM"
       /from\s+\d{1,2}:\d{2}\s*(?:am|pm)?\s+to\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i
     ];
-    
+
     for (const pattern of endTimePatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
@@ -475,25 +475,25 @@ export class EventDetectionProcessor extends BaseInputProcessor {
           if (timeParts) {
             // Create a copy of the start date/time
             const endDateTime = new Date(startDateTime.getTime());
-            
+
             let hours = parseInt(timeParts[1]);
             const minutes = parseInt(timeParts[2]);
             const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
-            
+
             // Adjust hours for AM/PM
             if (ampm === 'pm' && hours < 12) {
               hours += 12;
             } else if (ampm === 'am' && hours === 12) {
               hours = 0;
             }
-            
+
             endDateTime.setHours(hours, minutes, 0, 0);
-            
+
             // Ensure end time is after start time
             if (endDateTime <= startDateTime) {
               endDateTime.setDate(endDateTime.getDate() + 1);
             }
-            
+
             return endDateTime;
           }
         } catch (e) {
@@ -502,13 +502,13 @@ export class EventDetectionProcessor extends BaseInputProcessor {
         }
       }
     }
-    
+
     // If no end time is specified, default to 1 hour after start time
     const endDateTime = new Date(startDateTime.getTime());
     endDateTime.setHours(endDateTime.getHours() + 1);
     return endDateTime;
   }
-  
+
   /**
    * Extracts the location from text content
    * @param text The text to extract from
@@ -524,17 +524,17 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "in Conference Room A"
       /in\s+([^,.]+(?:room|office|building|center|centre|hall))/i
     ];
-    
+
     for (const pattern of locationPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
         return match[1].trim();
       }
     }
-    
+
     return '';
   }
-  
+
   /**
    * Extracts attendees from text content
    * @param text The text to extract from
@@ -550,7 +550,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "participants: John, Jane, Bob"
       /participants:?\s+([^.]+)/i
     ];
-    
+
     for (const pattern of attendeePatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
@@ -561,10 +561,10 @@ export class EventDetectionProcessor extends BaseInputProcessor {
           .filter(name => name.length > 0);
       }
     }
-    
+
     return [];
   }
-  
+
   /**
    * Extracts the description from text content
    * @param text The text to extract from
@@ -576,11 +576,11 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     let description = text;
     if (text.startsWith(title)) {
       description = text.substring(title.length).trim();
-      
+
       // Remove any leading punctuation
       description = description.replace(/^[.!?:;,\s]+/, '');
     }
-    
+
     return description;
   }
 }
@@ -600,11 +600,11 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     if (input instanceof TextInputItem) {
       return true;
     }
-    
+
     // For other input types, check if the potential nature is REFERENCE_INFO
     return input.getPotentialNature() === ItemNature.REFERENCE_INFO;
   }
-  
+
   /**
    * Processes the input item to extract reference information
    * @param input The input item to process
@@ -614,19 +614,19 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     // For TextInputItem, we need to extract reference information
     if (input instanceof TextInputItem) {
       const text = input.text;
-      
+
       // Extract title (first line or first sentence)
       const title = this.extractTitle(text);
-      
+
       // Extract URLs if present
       const urls = this.extractUrls(text);
-      
+
       // Extract tags if present
       const tags = this.extractTags(text);
-      
+
       // Use the rest as content
       const content = this.extractContent(text, title);
-      
+
       // Check if this is likely reference information
       if (
         this.isLikelyReferenceInfo(text) ||
@@ -646,7 +646,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
         );
       }
     }
-    
+
     // If we couldn't extract reference information or it's not a TextInputItem,
     // return a processed item with UNCLEAR nature
     return new BaseProcessedItem(
@@ -658,7 +658,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
       }
     );
   }
-  
+
   /**
    * Extracts the title from text content
    * @param text The text to extract from
@@ -670,17 +670,17 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
-    
+
     // If first line is too long, try to get the first sentence
     const firstSentence = text.split(/[.!?]/)[0].trim();
     if (firstSentence && firstSentence.length <= 100) {
       return firstSentence;
     }
-    
+
     // If all else fails, truncate the text
     return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
   }
-  
+
   /**
    * Extracts URLs from text content
    * @param text The text to extract from
@@ -689,14 +689,14 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
   private extractUrls(text: string): string[] {
     // Simple URL regex
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    
+
     // Find all matches
     const matches = text.match(urlRegex);
-    
+
     // Return matches or empty array
     return matches || [];
   }
-  
+
   /**
    * Extracts tags from text content
    * @param text The text to extract from
@@ -710,9 +710,9 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
       // tags: tag1, tag2, tag3
       /tags:?\s+([^.]+)/i
     ];
-    
+
     const tags = new Set<string>();
-    
+
     // Extract hashtags
     const hashtagMatches = text.match(tagPatterns[0]);
     if (hashtagMatches) {
@@ -720,7 +720,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
         tags.add(match.substring(1));
       }
     }
-    
+
     // Extract tags from "tags:" section
     const tagsMatch = text.match(tagPatterns[1]);
     if (tagsMatch && tagsMatch[1]) {
@@ -731,10 +731,10 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
         }
       }
     }
-    
+
     return Array.from(tags);
   }
-  
+
   /**
    * Extracts the content from text content
    * @param text The text to extract from
@@ -746,14 +746,14 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     let content = text;
     if (text.startsWith(title)) {
       content = text.substring(title.length).trim();
-      
+
       // Remove any leading punctuation
       content = content.replace(/^[.!?:;,\s]+/, '');
     }
-    
+
     return content;
   }
-  
+
   /**
    * Determines if the text is likely reference information
    * @param text The text to check
@@ -761,7 +761,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
    */
   private isLikelyReferenceInfo(text: string): boolean {
     const lowerText = text.toLowerCase();
-    
+
     // Check for reference indicators
     return (
       lowerText.includes('fyi') ||
@@ -789,7 +789,7 @@ export class DefaultProcessor extends BaseInputProcessor {
     // This is the fallback processor, so it can process any input
     return true;
   }
-  
+
   /**
    * Processes the input item as an unclassified item
    * @param input The input item to process
@@ -808,7 +808,7 @@ export class DefaultProcessor extends BaseInputProcessor {
         }
       );
     }
-    
+
     // For other input types, use the raw content
     return new BaseProcessedItem(
       input,
@@ -820,7 +820,7 @@ export class DefaultProcessor extends BaseInputProcessor {
       }
     );
   }
-  
+
   /**
    * Generates a title for the input item
    * @param input The input item
@@ -830,7 +830,7 @@ export class DefaultProcessor extends BaseInputProcessor {
     // Generate a title based on the input source and timestamp
     const date = input.timestamp.toLocaleDateString();
     const time = input.timestamp.toLocaleTimeString();
-    
+
     return `Unclassified ${input.source} from ${date} ${time}`;
   }
 }

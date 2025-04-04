@@ -1,16 +1,16 @@
 /**
  * Basic Input Item Classes for Input Processing System
- * 
+ *
  * This file implements the basic input item classes that are part of the MVP.
  */
 
-import { 
+import {
   BaseInputItem
-} from '../abstracts/abstract-base-classes';
+} from '../abstracts/base-classes';
 import {
   InputSource,
   ItemNature
-} from '../core/core-interfaces';
+} from '../core/interfaces';
 
 /**
  * Input item for manual task entry
@@ -45,7 +45,7 @@ export class ManualTaskInputItem extends BaseInputItem {
     };
     this.timestamp = new Date();
   }
-  
+
   /**
    * Gets the potential nature of this item
    * @returns Always returns ACTIONABLE_TASK for manual task items
@@ -82,7 +82,7 @@ export class TextInputItem extends BaseInputItem {
     };
     this.timestamp = new Date();
   }
-  
+
   /**
    * Gets the potential nature of this item
    * @returns A guess at the nature based on text content
@@ -90,7 +90,7 @@ export class TextInputItem extends BaseInputItem {
   public getPotentialNature(): ItemNature {
     // Simple heuristic for guessing nature based on text content
     const lowerText = this.text.toLowerCase();
-    
+
     // Check for task indicators
     if (
       lowerText.includes('todo') ||
@@ -102,7 +102,7 @@ export class TextInputItem extends BaseInputItem {
     ) {
       return ItemNature.ACTIONABLE_TASK;
     }
-    
+
     // Check for event indicators
     if (
       lowerText.includes('meeting') ||
@@ -114,7 +114,7 @@ export class TextInputItem extends BaseInputItem {
     ) {
       return ItemNature.POTENTIAL_EVENT;
     }
-    
+
     // Check for reference indicators
     if (
       lowerText.includes('fyi') ||
@@ -126,7 +126,7 @@ export class TextInputItem extends BaseInputItem {
     ) {
       return ItemNature.REFERENCE_INFO;
     }
-    
+
     // Check for project idea indicators
     if (
       lowerText.includes('idea') ||
@@ -136,7 +136,7 @@ export class TextInputItem extends BaseInputItem {
     ) {
       return ItemNature.PROJECT_IDEA;
     }
-    
+
     // Default to UNCLEAR if no specific indicators are found
     return ItemNature.UNCLEAR;
   }
@@ -161,7 +161,7 @@ export class MeetingNoteInputItem extends TextInputItem {
     public date: Date | null = null
   ) {
     super(notes, meetingTitle, InputSource.MEETING_NOTES);
-    
+
     // Initialize rawContent with all properties
     this.rawContent = {
       text: notes,
@@ -172,7 +172,7 @@ export class MeetingNoteInputItem extends TextInputItem {
     this.source = InputSource.MEETING_NOTES;
     this.timestamp = new Date();
   }
-  
+
   /**
    * Gets the potential nature of this item
    * @returns A guess at the nature based on meeting notes content

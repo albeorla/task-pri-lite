@@ -51,6 +51,11 @@ This project has been set up with the following components:
   - `inputs/` - Input item classes
   - `processors/` - Input processors
   - `services/` - Orchestration services
+- `docs/` - Documentation
+  - `prd.md` - Product Requirements Document
+  - `archive/` - Archived documentation files
+- `pm/` - Project Management
+  - `P0_IMPLEMENTATION_STATUS_AND_PLAN.md` - P0 implementation status and action plan
 
 ## Environment Variables
 
@@ -67,6 +72,15 @@ Then edit the `.env` file with your actual values.
 - `npm run build` - Build the TypeScript project
 - `npm run start` - Run the compiled JavaScript
 - `npm run dev` - Run TypeScript in watch mode for development
+
+## Documentation
+
+The project documentation is organized as follows:
+
+- `docs/prd.md` - The Product Requirements Document (PRD) that outlines the system architecture, components, and requirements.
+- `pm/P0_IMPLEMENTATION_STATUS_AND_PLAN.md` - A consolidated document that tracks the P0 implementation status and provides an action plan for completing the MVP.
+
+Redundant or outdated documentation has been archived in the `docs/archive/` directory.
 
 ## License
 
