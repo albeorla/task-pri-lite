@@ -1,1 +1,0 @@
-export { Prioritizer, EisenhowerPrioritizer } from './eisenhower-prioritizer'; 
