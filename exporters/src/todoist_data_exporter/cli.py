@@ -27,6 +27,9 @@ load_dotenv()
 
 console = Console()
 
+# Default paths aligned with migration standards
+DEFAULT_OUTPUT_PATH = os.getenv("DEFAULT_OUTPUT_PATH", "./output/todoist_export.json")
+
 
 @click.group()
 def cli() -> None:
@@ -41,11 +44,12 @@ class ExportOptions:
     def __init__(
         self,
         api_token: str | None = None,
-        output: str = os.getenv("DEFAULT_OUTPUT_PATH", "./output/planning_export.json"),
+        output: str = DEFAULT_OUTPUT_PATH,
         format_type: str = os.getenv("DEFAULT_FORMAT", "json"),
         structure: str = os.getenv("DEFAULT_STRUCTURE", "hierarchical"),
         input_file: str | None = None,
         project_id: str | None = None,
+        validate_schema: bool = True,
     ) -> None:
         """Initialize export options.
 
@@ -56,6 +60,7 @@ class ExportOptions:
             structure: Data structure
             input_file: Input JSON file
             project_id: Project ID to export
+            validate_schema: Whether to validate against JSON Schema
         """
         self.api_token = api_token
         self.output = output
@@ -63,6 +68,7 @@ class ExportOptions:
         self.structure = structure
         self.input_file = input_file
         self.project_id = project_id
+        self.validate_schema = validate_schema
 
 
 @cli.command()
@@ -74,8 +80,8 @@ class ExportOptions:
 @click.option(
     "--output",
     "-o",
-    default=os.getenv("DEFAULT_OUTPUT_PATH", "./output/planning_export.json"),
-    help="Output file path (default: from .env or ./output/planning_export.json)",
+    default=DEFAULT_OUTPUT_PATH,
+    help=f"Output file path (default: {DEFAULT_OUTPUT_PATH})",
 )
 @click.option(
     "--format",
@@ -102,6 +108,11 @@ class ExportOptions:
     "-p",
     help="Export only a specific project by ID",
 )
+@click.option(
+    "--validate-schema/--no-validate-schema",
+    default=True,
+    help="Validate output against JSON Schema (default: True)",
+)
 def export(
     api_token: str | None,
     output: str,
@@ -109,6 +120,7 @@ def export(
     structure: str,
     input_file: str | None,
     project_id: str | None,
+    validate_schema: bool,
 ) -> None:
     """Export planning data to a file."""
     # Create options object to reduce function complexity
@@ -119,6 +131,7 @@ def export(
         structure=structure,
         input_file=input_file,
         project_id=project_id,
+        validate_schema=validate_schema,
     )
 
     # Call the implementation function
@@ -148,7 +161,7 @@ def _export_implementation(options: ExportOptions) -> None:
 
         # Create services
         data_service = TodoistDataService(repository)
-        export_service = TodoistExportService()
+        export_service = TodoistExportService(validate_schema=options.validate_schema)
 
         # Get data
         data: PlanningData
@@ -181,6 +194,8 @@ def _export_implementation(options: ExportOptions) -> None:
 
         # Export data
         console.print(f"Exporting data to {options.format_type} format...")
+        if options.validate_schema and options.format_type == "json":
+            console.print("Schema validation enabled")
         export_service.export_data(data, options.output, options.format_type)
 
         console.print(

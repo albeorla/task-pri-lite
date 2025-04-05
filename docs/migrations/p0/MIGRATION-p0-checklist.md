@@ -6,43 +6,43 @@
 
 **A. Define Contracts (JSON Schemas)**
 
-- [ ] Define `todoist_schema.json`: Specify structure, data types, required fields for Todoist tasks.
-- [ ] Define `calendar_schema.json`: Specify structure, data types, required fields for Google Calendar events/tasks.
-- [ ] Choose and document JSON Schema version (e.g., draft-07).
-- [ ] Set up schema validation tooling/libraries (for both Python and TypeScript).
+- [x] Define `todoist_schema.json`: Specify structure, data types, required fields for Todoist tasks.
+- [x] Define `calendar_schema.json`: Specify structure, data types, required fields for Google Calendar events/tasks.
+- [x] Choose and document JSON Schema version (e.g., draft-07).
+- [x] Set up schema validation tooling/libraries (for both Python and TypeScript).
 
 **B. Implement Python Exporters**
 
 - **Todoist Exporter (`exporters/todoist/`)**
-  - [ ] Set up Python environment and install Todoist SDK.
-  - [ ] Implement `adapter.py`: Logic to connect to Todoist API and retrieve tasks/data.
-  - [ ] Implement `converter.py`: Logic to transform raw Todoist data into the defined JSON schema format.
-  - [ ] Integrate JSON schema validation within the exporter to ensure output correctness.
-  - [ ] Implement file writing logic (potentially using `shared/file_writer.py`) to output `todoist_export.json`.
-  - [ ] Handle API keys/secrets securely.
-  - [ ] Add basic error handling and logging.
+  - [x] Set up Python environment and install Todoist SDK.
+  - [x] Implement `adapter.py`: Logic to connect to Todoist API and retrieve tasks/data.
+  - [x] Implement `converter.py`: Logic to transform raw Todoist data into the defined JSON schema format.
+  - [x] Integrate JSON schema validation within the exporter to ensure output correctness.
+  - [x] Implement file writing logic (potentially using `shared/file_writer.py`) to output `todoist_export.json`.
+  - [x] Handle API keys/secrets securely.
+  - [x] Add basic error handling and logging.
 - **Google Calendar/Tasks Exporter (`exporters/google-calendar/`)**
-  - [ ] Set up Python environment and install Google API Client Library.
-  - [ ] Implement OAuth 2.0 authentication flow for Google Calendar/Tasks.
-  - [ ] Implement `adapter.py`: Logic to connect to Google APIs and retrieve events/tasks.
-  - [ ] Implement `converter.py`: Logic to transform raw Google data into the defined JSON schema format.
-  - [ ] Integrate JSON schema validation within the exporter.
-  - [ ] Implement file writing logic to output `calendar_events.json` and/or `calendar_tasks.json`.
-  - [ ] Handle OAuth credentials securely.
-  - [ ] Add basic error handling and logging.
+  - [x] Set up Python environment and install Google API Client Library.
+  - [x] Implement OAuth 2.0 authentication flow for Google Calendar/Tasks.
+  - [x] Implement `adapter.py`: Logic to connect to Google APIs and retrieve events/tasks.
+  - [x] Implement `converter.py`: Logic to transform raw Google data into the defined JSON schema format.
+  - [x] Integrate JSON schema validation within the exporter.
+  - [x] Implement file writing logic to output `calendar_events.json` and/or `calendar_tasks.json`.
+  - [x] Handle OAuth credentials securely.
+  - [x] Add basic error handling and logging.
 - **Shared Components (`exporters/shared/`)**
-  - [ ] Implement `file_writer.py` if common file writing logic is needed.
+  - [x] Implement `file_writer.py` if common file writing logic is needed.
 
 **C. Implement TypeScript Core Application (File Reading)**
 
 - **Infrastructure Layer (`src/infrastructure/file_storage/`)**
   - [ ] Define `IDataSource` interface in the Core layer (if not already present).
   - [ ] Implement `FileStorageService` adapter adhering to `IDataSource`.
-  - [ ] Implement `todoist_loader.ts`: Logic to read `todoist_export.json`.
-  - [ ] Implement `calendar_loader.ts`: Logic to read `calendar_*.json`.
-  - [ ] Integrate JSON schema validation within the loaders (using a TypeScript library).
-  - [ ] Implement data mapping logic to convert validated JSON into Core domain models (e.g., `Task`, `Project`).
-  - [ ] Add robust error handling (e.g., file not found, invalid JSON, schema validation failure).
+  - [x] Implement `todoist_loader.ts`: Logic to read `todoist_export.json`.
+  - [x] Implement `calendar_loader.ts`: Logic to read `calendar_*.json`.
+  - [x] Integrate JSON schema validation within the loaders (using a TypeScript library).
+  - [x] Implement data mapping logic to convert validated JSON into Core domain models (e.g., `Task`, `Project`).
+  - [x] Add robust error handling (e.g., file not found, invalid JSON, schema validation failure).
 - **Application Layer Integration**
   - [ ] Inject/provide `FileStorageService` to relevant Application Layer services/processors.
   - [ ] Ensure Application Layer uses the `IDataSource` interface to fetch data.
@@ -51,9 +51,9 @@
 
 **D. Project Setup & Structure**
 
-- [ ] Create the defined project directory structure (`albeorla-task-pri-lite/`, `exporters/`, `src/`, etc.).
-- [ ] Initialize TypeScript project (`tsconfig.json`, package manager).
-- [ ] Set up Python environments for exporters (e.g., using `venv`).
+- [x] Create the defined project directory structure (`albeorla-task-pri-lite/`, `exporters/`, `src/`, etc.).
+- [x] Initialize TypeScript project (`tsconfig.json`, package manager).
+- [x] Set up Python environments for exporters (e.g., using `venv`).
 
 **E. Testing & Documentation (P0)**
 
@@ -62,7 +62,7 @@
 - [ ] Write unit tests for TypeScript file loaders and JSON validation.
 - [ ] Write unit tests for TypeScript data mapping logic.
 - [ ] Write integration tests for the P0 flow: Run Python exporter -> Verify JSON output -> Run TS App -> Verify core logic output.
-- [ ] Document the defined JSON schemas.
+- [x] Document the defined JSON schemas.
 - [ ] Document how to set up credentials for Todoist and Google Calendar.
 - [ ] Document how to run the Python exporters manually.
 - [ ] Document how to run the TypeScript core application.

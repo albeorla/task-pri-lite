@@ -1,16 +1,23 @@
-"""Formatters for Google Calendar data."""
+"""Formatters package for Google Calendar exporter."""
 
-# Legacy formatters
-from google_calendar_exporter.formatters.event_formatter import EventJsonFormatter
-
-# New planning formatter
+from google_calendar_exporter.formatters.event_formatter import (
+    DateTimeEncoder,
+    EventJsonFormatter,
+)
 from google_calendar_exporter.formatters.planning_formatter import PlanningJsonFormatter
+from google_calendar_exporter.formatters.schema_validator import (
+    SchemaValidationFormatterWrapper,
+    validate_calendar_events,
+    validate_calendar_tasks,
+)
 from google_calendar_exporter.formatters.task_formatter import TaskJsonFormatter
 
 __all__ = [
-    # Legacy formatters
+    "DateTimeEncoder",
     "EventJsonFormatter",
     "TaskJsonFormatter",
-    # New planning formatter
     "PlanningJsonFormatter",
+    "SchemaValidationFormatterWrapper",
+    "validate_calendar_events",
+    "validate_calendar_tasks",
 ]

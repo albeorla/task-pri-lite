@@ -1,6 +1,8 @@
 """Main entry point for the Google Calendar exporter."""
 
 import logging
+import os
+from typing import Optional, Tuple
 
 from rich.console import Console
 from rich.panel import Panel
@@ -18,7 +20,10 @@ from google_calendar_exporter.exporter import GoogleCalendarExporter
 from google_calendar_exporter.formatters import (
     EventJsonFormatter,
     PlanningJsonFormatter,
+    SchemaValidationFormatterWrapper,
     TaskJsonFormatter,
+    validate_calendar_events,
+    validate_calendar_tasks,
 )
 from google_calendar_exporter.planning_processor import PlanningProcessor
 
@@ -29,8 +34,16 @@ logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
-def setup_dependencies(config: Config) -> GoogleCalendarExporter:
-    """Creates and wires up the application components."""
+def setup_dependencies(config: Config, validate_schema: bool = True) -> GoogleCalendarExporter:
+    """Creates and wires up the application components.
+    
+    Args:
+        config: Configuration settings
+        validate_schema: Whether to validate data against JSON schema
+        
+    Returns:
+        Configured GoogleCalendarExporter instance
+    """
     logger.info("Setting up application dependencies...")
 
     # --- Authentication ---
@@ -57,6 +70,18 @@ def setup_dependencies(config: Config) -> GoogleCalendarExporter:
     event_formatter = EventJsonFormatter()
     task_formatter = TaskJsonFormatter()
     planning_formatter = PlanningJsonFormatter()
+    
+    # If schema validation is enabled, wrap the formatters with validators
+    if validate_schema:
+        logger.info("Schema validation enabled for output formatters.")
+        event_formatter = SchemaValidationFormatterWrapper(
+            event_formatter, validate_calendar_events
+        )
+        task_formatter = SchemaValidationFormatterWrapper(
+            task_formatter, validate_calendar_tasks
+        )
+        # Note: We don't validate planning data as it uses a different format
+    
     logger.info("Output Formatters initialized (JSON).")
 
     # --- Planning Processor ---
@@ -79,27 +104,42 @@ def setup_dependencies(config: Config) -> GoogleCalendarExporter:
     return exporter
 
 
-def run_export():
-    """Initializes dependencies and runs the exporter."""
-    print("=============================================")
-    print(" Starting Google Calendar Exporter ")
-    print("=============================================")
+def run_export(validate_schema: bool = True) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """Initializes dependencies and runs the exporter.
+    
+    Args:
+        validate_schema: Whether to validate output against JSON schema
+        
+    Returns:
+        Tuple of (events_json, tasks_json, planning_json) or (None, None, None) on failure
+    """
+    console = Console()
+    console.print("=============================================")
+    console.print(" Starting Google Calendar Exporter ")
+    console.print("=============================================")
     logger.info("=============================================")
     logger.info(" Starting Google Calendar Exporter ")
     logger.info("=============================================")
+    
+    if validate_schema:
+        logger.info("Schema validation is ENABLED")
+        console.print("[bold]Schema validation:[/bold] [green]ENABLED[/green]")
+    else:
+        logger.info("Schema validation is DISABLED")
+        console.print("[bold]Schema validation:[/bold] [yellow]DISABLED[/yellow]")
+        
     try:
         # Validate config explicitly at startup
         try:
             settings.validate()
-            print("Configuration validated.")
             logger.info("Configuration validated.")
         except FileNotFoundError as e:
-            print(f"Configuration error: {e}")
-            print(f"Looking for credentials file at: {settings.CREDENTIALS_FILE}")
+            console.print(f"[bold red]Configuration error:[/bold red] {e}")
+            console.print(f"Looking for credentials file at: {settings.CREDENTIALS_FILE}")
             raise
 
         # Create the exporter instance with dependencies wired up
-        exporter = setup_dependencies(settings)
+        exporter = setup_dependencies(settings, validate_schema)
 
         # Run the export process
         events_json, tasks_json, planning_json = exporter.export_data()
@@ -107,13 +147,7 @@ def run_export():
         if (
             events_json is not None and tasks_json is not None and planning_json is not None
         ):  # Check for None which indicates failure
-            # logger.info("Export process finished successfully.")
-            # logger.info(f"Events output saved to: {settings.EVENTS_OUTPUT_FILE}")
-            # logger.info(f"Tasks output saved to: {settings.TASKS_OUTPUT_FILE}")
-            # logger.info(f"Planning data saved to: {settings.PLANNING_OUTPUT_FILE}")
-
             # Use Rich Panel for success message
-            console = Console()
             success_message = (
                 f"[bold green]✓ Export Successful![/bold green]\n\n"
                 f"Events saved to: [cyan]{settings.EVENTS_OUTPUT_FILE}[/cyan]\n"
@@ -121,28 +155,46 @@ def run_export():
                 f"Planning data saved to: [cyan]{settings.PLANNING_OUTPUT_FILE}[/cyan]"
             )
             console.print(Panel(success_message, title="Google Calendar Export", expand=False, border_style="green"))
+            return events_json, tasks_json, planning_json
         else:
             logger.error("Export process failed. Check previous logs for details.")
-            raise RuntimeError(
-                "Export process failed. Check logs for details."
-            )  # Raise exception instead of exiting
+            console.print(Panel(
+                "[bold red]Export process failed.[/bold red]\nCheck logs for details.",
+                title="Google Calendar Export",
+                expand=False,
+                border_style="red"
+            ))
+            return None, None, None
 
     except FileNotFoundError as e:
         # Specific handling for config file not found during validation
         logger.error(f"Configuration error: {e}")
-        raise  # Re-raise the exception to be caught by the CLI
-    except Exception:
+        console.print(Panel(
+            f"[bold red]Configuration error:[/bold red] {str(e)}",
+            title="Google Calendar Export",
+            expand=False,
+            border_style="red"
+        ))
+        return None, None, None
+    except Exception as e:
         # Catch-all for unexpected errors during setup or export
         logger.exception("An unexpected critical error occurred during execution.")
-        raise  # Re-raise the exception to be caught by the CLI
+        console.print(Panel(
+            f"[bold red]Error:[/bold red] {str(e)}",
+            title="Google Calendar Export",
+            expand=False,
+            border_style="red"
+        ))
+        return None, None, None
     finally:
-        print("=============================================")
-        print(" Google Calendar Exporter Finished ")
-        print("=============================================")
+        console.print("=============================================")
+        console.print(" Google Calendar Exporter Finished ")
+        console.print("=============================================")
         logger.info("=============================================")
         logger.info(" Google Calendar Exporter Finished ")
         logger.info("=============================================")
 
 
 if __name__ == "__main__":
-    run_export()
+    # When run directly, execute with schema validation enabled
+    run_export(validate_schema=True)

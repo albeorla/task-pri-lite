@@ -5,6 +5,7 @@ from todoist_data_exporter.application.exporters.csv_exporter import CsvExporter
 from todoist_data_exporter.application.exporters.exporter import Exporter
 from todoist_data_exporter.application.exporters.json_exporter import JsonExporter
 from todoist_data_exporter.application.exporters.markdown_exporter import MarkdownExporter
+from todoist_data_exporter.application.exporters.schema_validator import SchemaValidationExporterWrapper
 from todoist_data_exporter.application.formatters.flat import FlatFormatter
 from todoist_data_exporter.application.formatters.hierarchical import HierarchicalFormatter
 from todoist_data_exporter.domain.interfaces.repository import (
@@ -50,12 +51,29 @@ class TodoistDataService:
 class TodoistExportService:
     """Service for exporting Planning data."""
 
-    def __init__(self) -> None:
-        """Initialize the service."""
+    def __init__(self, validate_schema: bool = True) -> None:
+        """Initialize the service.
+
+        Args:
+            validate_schema: Whether to validate data against the schema before exporting
+        """
+        self.validate_schema = validate_schema
+        
+        # Create the base exporters
+        json_exporter = JsonExporter()
+        markdown_exporter = MarkdownExporter()
+        csv_exporter = CsvExporter()
+        
+        # If schema validation is enabled, wrap the exporters
+        if validate_schema:
+            json_exporter = SchemaValidationExporterWrapper(json_exporter)
+            # Note: We only validate JSON exports since they must conform to our schema
+            # Markdown and CSV are transformed formats and don't need to match the schema
+        
         self.exporters: dict[str, Exporter] = {
-            "json": JsonExporter(),
-            "markdown": MarkdownExporter(),
-            "csv": CsvExporter(),
+            "json": json_exporter,
+            "markdown": markdown_exporter,
+            "csv": csv_exporter,
         }
 
     def export_data(self, data: PlanningData, output_path: str, format_type: str) -> None:
@@ -67,7 +85,7 @@ class TodoistExportService:
             format_type: Export format type (json, markdown, csv)
 
         Raises:
-            ValueError: If the format type is not supported
+            ValueError: If the format type is not supported or if schema validation fails
         """
         if format_type not in self.exporters:
             raise ValueError(f"Unsupported format type: {format_type}")
