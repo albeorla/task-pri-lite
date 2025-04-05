@@ -84,6 +84,12 @@ export class GTDClarificationProcessor implements TaskProcessor {
           console.log(`  Task '${task.description}' is a single Next Action.`);
           await this.assignContext(task);
         }
+      } else {
+        // Handle null clarification from LLM
+        console.log("  LLM returned null. Using fallback clarification.");
+        task.isActionable = false;
+        task.status = TaskStatus.REFERENCE;
+        console.log(`  Task marked as ${task.status}.`);
       }
     } else {
       console.log("  LLM Service not available. Using manual clarification.");
