@@ -9,8 +9,8 @@ import {
   IInputItem,
   IProcessedItem,
   IInputProcessor,
-  IDestinationHandler
-} from '../core/interfaces';
+  IDestinationHandler,
+} from "../core/interfaces";
 
 /**
  * Service responsible for processing input items
@@ -47,7 +47,7 @@ export class InputProcessingService {
       }
     }
 
-    throw new Error('No processor found that can handle the input');
+    throw new Error("No processor found that can handle the input");
   }
 }
 
@@ -87,6 +87,6 @@ export class OutputHandlingService {
       }
     }
 
-    throw new Error('No handler found that can handle the processed item');
+    throw new Error("No handler found that can handle the processed item");
   }
 }

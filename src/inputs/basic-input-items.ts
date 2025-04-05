@@ -4,13 +4,8 @@
  * This file implements the basic input item classes that are part of the MVP.
  */
 
-import {
-  BaseInputItem
-} from '../abstracts/base-classes';
-import {
-  InputSource,
-  ItemNature
-} from '../core/interfaces';
+import { BaseInputItem } from "../abstracts/base-classes";
+import { InputSource, ItemNature } from "../core/interfaces";
 
 /**
  * Input item for manual task entry
@@ -26,22 +21,22 @@ export class ManualTaskInputItem extends BaseInputItem {
    */
   constructor(
     public title: string,
-    public description: string = '',
+    public description: string = "",
     public dueDate: Date | null = null,
-    public priority: number = 4
+    public priority: number = 4,
   ) {
     super(InputSource.MANUAL_ENTRY, {
       title,
       description,
       dueDate,
-      priority
+      priority,
     });
     this.source = InputSource.MANUAL_ENTRY;
     this.rawContent = {
       title,
       description,
       dueDate,
-      priority
+      priority,
     };
     this.timestamp = new Date();
   }
@@ -68,17 +63,17 @@ export class TextInputItem extends BaseInputItem {
    */
   constructor(
     public text: string,
-    public title: string = '',
-    source: InputSource = InputSource.OTHER
+    public title: string = "",
+    source: InputSource = InputSource.OTHER,
   ) {
     super(source, {
       text,
-      title
+      title,
     });
     this.source = source;
     this.rawContent = {
       text,
-      title
+      title,
     };
     this.timestamp = new Date();
   }
@@ -93,46 +88,47 @@ export class TextInputItem extends BaseInputItem {
 
     // Check for task indicators
     if (
-      lowerText.includes('todo') ||
-      lowerText.includes('task') ||
-      lowerText.includes('action item') ||
-      lowerText.includes('please') ||
-      lowerText.includes('need to') ||
-      lowerText.includes('should')
+      lowerText.includes("todo") ||
+      lowerText.includes("task") ||
+      lowerText.includes("action item") ||
+      lowerText.includes("please") ||
+      lowerText.includes("need to") ||
+      lowerText.includes("should")
     ) {
       return ItemNature.ACTIONABLE_TASK;
     }
 
     // Check for event indicators
     if (
-      lowerText.includes('meeting') ||
-      lowerText.includes('appointment') ||
-      lowerText.includes('schedule') ||
-      lowerText.includes('calendar') ||
-      lowerText.includes('event') ||
-      (lowerText.includes('at') && /\d{1,2}(:\d{2})?\s*(am|pm)/i.test(lowerText))
+      lowerText.includes("meeting") ||
+      lowerText.includes("appointment") ||
+      lowerText.includes("schedule") ||
+      lowerText.includes("calendar") ||
+      lowerText.includes("event") ||
+      (lowerText.includes("at") &&
+        /\d{1,2}(:\d{2})?\s*(am|pm)/i.test(lowerText))
     ) {
       return ItemNature.POTENTIAL_EVENT;
     }
 
     // Check for reference indicators
     if (
-      lowerText.includes('fyi') ||
-      lowerText.includes('reference') ||
-      lowerText.includes('information') ||
-      lowerText.includes('note that') ||
-      lowerText.includes('http') ||
-      lowerText.includes('www')
+      lowerText.includes("fyi") ||
+      lowerText.includes("reference") ||
+      lowerText.includes("information") ||
+      lowerText.includes("note that") ||
+      lowerText.includes("http") ||
+      lowerText.includes("www")
     ) {
       return ItemNature.REFERENCE_INFO;
     }
 
     // Check for project idea indicators
     if (
-      lowerText.includes('idea') ||
-      lowerText.includes('project') ||
-      lowerText.includes('concept') ||
-      lowerText.includes('proposal')
+      lowerText.includes("idea") ||
+      lowerText.includes("project") ||
+      lowerText.includes("concept") ||
+      lowerText.includes("proposal")
     ) {
       return ItemNature.PROJECT_IDEA;
     }
@@ -158,7 +154,7 @@ export class MeetingNoteInputItem extends TextInputItem {
     public meetingTitle: string,
     public notes: string,
     public attendees: string[] = [],
-    public date: Date | null = null
+    public date: Date | null = null,
   ) {
     super(notes, meetingTitle, InputSource.MEETING_NOTES);
 
@@ -167,7 +163,7 @@ export class MeetingNoteInputItem extends TextInputItem {
       text: notes,
       title: meetingTitle,
       attendees: attendees,
-      date: date
+      date: date,
     };
     this.source = InputSource.MEETING_NOTES;
     this.timestamp = new Date();

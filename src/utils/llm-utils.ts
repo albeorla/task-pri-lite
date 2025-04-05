@@ -1,8 +1,8 @@
-import { PromptTemplate } from '@langchain/core/prompts';
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // Prompt templates that mirror the Python implementation
 export const clarifyPromptTemplate = new PromptTemplate({
-  inputVariables: ['taskDescription'],
+  inputVariables: ["taskDescription"],
   template: `
 You are a helpful productivity assistant applying the 'Getting Things Done' (GTD) methodology.
 Analyze the following input captured by the user: '{taskDescription}'
@@ -23,7 +23,7 @@ Task Description: '{taskDescription}'
 });
 
 export const nextActionPromptTemplate = new PromptTemplate({
-  inputVariables: ['projectName', 'projectOutcome'],
+  inputVariables: ["projectName", "projectOutcome"],
   template: `
 You are a helpful productivity assistant applying the 'Getting Things Done' (GTD) methodology.
 The user is working on a project with the following desired outcome: '{projectOutcome}'
@@ -41,7 +41,7 @@ Desired Outcome: '{projectOutcome}'
 });
 
 export const eisenhowerPromptTemplate = new PromptTemplate({
-  inputVariables: ['taskDescription'],
+  inputVariables: ["taskDescription"],
   template: `
 You are a helpful productivity assistant applying the Eisenhower Matrix (Urgent/Important) for prioritization.
 Analyze the following task: '{taskDescription}'
@@ -66,16 +66,20 @@ export function parseLLMJson<T>(response: string, context: string): T | null {
   try {
     // Remove potential markdown code fences
     let cleanedResponse = response.trim();
-    if (cleanedResponse.startsWith('```json')) {
-      cleanedResponse = cleanedResponse.substring(7, cleanedResponse.length - 3).trim();
-    } else if (cleanedResponse.startsWith('```')) {
-      cleanedResponse = cleanedResponse.substring(3, cleanedResponse.length - 3).trim();
+    if (cleanedResponse.startsWith("```json")) {
+      cleanedResponse = cleanedResponse
+        .substring(7, cleanedResponse.length - 3)
+        .trim();
+    } else if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .substring(3, cleanedResponse.length - 3)
+        .trim();
     }
-    
+
     return JSON.parse(cleanedResponse) as T;
   } catch (error) {
     console.error(`Failed to parse JSON response for ${context}:`, error);
-    console.error('Raw response was:', response);
+    console.error("Raw response was:", response);
     return null;
   }
 }
@@ -92,4 +96,4 @@ export interface EisenhowerResponse {
   urgent: boolean | null;
   important: boolean | null;
   rationale: string;
-} 
+}

@@ -8,18 +8,18 @@ import {
   IInputItem,
   IProcessedItem,
   ItemNature,
-  DestinationType
-} from '../core/interfaces';
+  DestinationType,
+} from "../core/interfaces";
 
 import {
   BaseInputProcessor,
-  BaseProcessedItem
-} from '../abstracts/base-classes';
+  BaseProcessedItem,
+} from "../abstracts/base-classes";
 
 import {
   TextInputItem,
-  ManualTaskInputItem
-} from '../inputs/basic-input-items';
+  ManualTaskInputItem,
+} from "../inputs/basic-input-items";
 
 /**
  * Processor for detecting actionable tasks in text content
@@ -62,8 +62,8 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
           title: input.title,
           description: input.description,
           dueDate: input.dueDate,
-          priority: input.priority
-        }
+          priority: input.priority,
+        },
       );
     }
 
@@ -91,8 +91,8 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
           title,
           description,
           dueDate,
-          priority
-        }
+          priority,
+        },
       );
     }
 
@@ -105,8 +105,8 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
         title: "Task from " + input.source,
         description: JSON.stringify(input.rawContent),
         dueDate: null,
-        priority: 4
-      }
+        priority: 4,
+      },
     );
   }
 
@@ -117,7 +117,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split('\n')[0].trim();
+    const firstLine = text.split("\n")[0].trim();
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
@@ -129,7 +129,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
     }
 
     // If all else fails, truncate the text
-    return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
+    return text.substring(0, 100).trim() + (text.length > 100 ? "..." : "");
   }
 
   /**
@@ -151,7 +151,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       // "by next week"
       /by\s+(next\s+week)/i,
       // "by Friday"
-      /by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
+      /by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
     ];
 
     for (const pattern of datePatterns) {
@@ -159,27 +159,37 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       if (match && match[1]) {
         try {
           // For simple relative dates, calculate the actual date
-          if (match[1].toLowerCase() === 'tomorrow') {
+          if (match[1].toLowerCase() === "tomorrow") {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             return tomorrow;
           }
 
-          if (match[1].toLowerCase() === 'next week') {
+          if (match[1].toLowerCase() === "next week") {
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + 7);
             return nextWeek;
           }
 
           // For day names, calculate the next occurrence
-          const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          const dayNames = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
           const dayIndex = dayNames.indexOf(match[1].toLowerCase());
           if (dayIndex !== -1) {
             const today = new Date();
             const currentDay = today.getDay();
             const daysUntil = (dayIndex + 7 - currentDay) % 7;
             const nextDay = new Date();
-            nextDay.setDate(today.getDate() + (daysUntil === 0 ? 7 : daysUntil));
+            nextDay.setDate(
+              today.getDate() + (daysUntil === 0 ? 7 : daysUntil),
+            );
             return nextDay;
           }
 
@@ -216,14 +226,14 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       // "low priority"
       { pattern: /(low)\s+priority/i, value: 3 },
       // "p1", "p2", "p3", "p4"
-      { pattern: /\b(p[1-4])\b/i, value: 0 }
+      { pattern: /\b(p[1-4])\b/i, value: 0 },
     ];
 
     for (const { pattern, value } of priorityPatterns) {
       const match = text.match(pattern);
       if (match) {
         // For p1-p4 notation, extract the number
-        if (match[1] && match[1].toLowerCase().startsWith('p')) {
+        if (match[1] && match[1].toLowerCase().startsWith("p")) {
           const priorityNumber = parseInt(match[1].substring(1));
           if (priorityNumber >= 1 && priorityNumber <= 4) {
             return priorityNumber;
@@ -251,7 +261,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       description = text.substring(title.length).trim();
 
       // Remove any leading punctuation
-      description = description.replace(/^[.!?:;,\s]+/, '');
+      description = description.replace(/^[.!?:;,\s]+/, "");
     }
 
     return description;
@@ -318,8 +328,8 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             startDateTime,
             endDateTime,
             location,
-            attendees
-          }
+            attendees,
+          },
         );
       }
     }
@@ -331,8 +341,11 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       ItemNature.UNCLEAR,
       DestinationType.REVIEW_LATER,
       {
-        content: input instanceof TextInputItem ? input.text : JSON.stringify(input.rawContent)
-      }
+        content:
+          input instanceof TextInputItem
+            ? input.text
+            : JSON.stringify(input.rawContent),
+      },
     );
   }
 
@@ -343,7 +356,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split('\n')[0].trim();
+    const firstLine = text.split("\n")[0].trim();
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
@@ -355,7 +368,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     }
 
     // If all else fails, truncate the text
-    return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
+    return text.substring(0, 100).trim() + (text.length > 100 ? "..." : "");
   }
 
   /**
@@ -375,7 +388,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "tomorrow at 2:30 PM"
       /tomorrow\s+at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
       // "at 2:30 PM"
-      /at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i
+      /at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
     ];
 
     for (const pattern of dateTimePatterns) {
@@ -399,16 +412,16 @@ export class EventDetectionProcessor extends BaseInputProcessor {
               const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
 
               // Adjust hours for AM/PM
-              if (ampm === 'pm' && hours < 12) {
+              if (ampm === "pm" && hours < 12) {
                 hours += 12;
-              } else if (ampm === 'am' && hours === 12) {
+              } else if (ampm === "am" && hours === 12) {
                 hours = 0;
               }
 
               date.setHours(hours, minutes, 0, 0);
               return date;
             }
-          } else if (match[1] && match[1].toLowerCase() === 'tomorrow') {
+          } else if (match[1] && match[1].toLowerCase() === "tomorrow") {
             // "tomorrow" pattern
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -425,9 +438,9 @@ export class EventDetectionProcessor extends BaseInputProcessor {
               const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
 
               // Adjust hours for AM/PM
-              if (ampm === 'pm' && hours < 12) {
+              if (ampm === "pm" && hours < 12) {
                 hours += 12;
-              } else if (ampm === 'am' && hours === 12) {
+              } else if (ampm === "am" && hours === 12) {
                 hours = 0;
               }
 
@@ -451,7 +464,10 @@ export class EventDetectionProcessor extends BaseInputProcessor {
    * @param startDateTime The already extracted start date/time
    * @returns The extracted end date/time or null if not found
    */
-  private extractEndDateTime(text: string, startDateTime: Date | null): Date | null {
+  private extractEndDateTime(
+    text: string,
+    startDateTime: Date | null,
+  ): Date | null {
     if (!startDateTime) {
       return null;
     }
@@ -463,7 +479,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "until 3:30 PM"
       /until\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
       // "from 2:30 PM to 3:30 PM"
-      /from\s+\d{1,2}:\d{2}\s*(?:am|pm)?\s+to\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i
+      /from\s+\d{1,2}:\d{2}\s*(?:am|pm)?\s+to\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
     ];
 
     for (const pattern of endTimePatterns) {
@@ -481,9 +497,9 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
 
             // Adjust hours for AM/PM
-            if (ampm === 'pm' && hours < 12) {
+            if (ampm === "pm" && hours < 12) {
               hours += 12;
-            } else if (ampm === 'am' && hours === 12) {
+            } else if (ampm === "am" && hours === 12) {
               hours = 0;
             }
 
@@ -522,7 +538,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "at Conference Room A"
       /at\s+([^,.]+(?:room|office|building|center|centre|hall))/i,
       // "in Conference Room A"
-      /in\s+([^,.]+(?:room|office|building|center|centre|hall))/i
+      /in\s+([^,.]+(?:room|office|building|center|centre|hall))/i,
     ];
 
     for (const pattern of locationPatterns) {
@@ -532,7 +548,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       }
     }
 
-    return '';
+    return "";
   }
 
   /**
@@ -548,7 +564,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "with John, Jane, and Bob"
       /with\s+([^.]+)/i,
       // "participants: John, Jane, Bob"
-      /participants:?\s+([^.]+)/i
+      /participants:?\s+([^.]+)/i,
     ];
 
     for (const pattern of attendeePatterns) {
@@ -557,8 +573,8 @@ export class EventDetectionProcessor extends BaseInputProcessor {
         // Split by commas and "and"
         return match[1]
           .split(/,|\sand\s/)
-          .map(name => name.trim())
-          .filter(name => name.length > 0);
+          .map((name) => name.trim())
+          .filter((name) => name.length > 0);
       }
     }
 
@@ -578,7 +594,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       description = text.substring(title.length).trim();
 
       // Remove any leading punctuation
-      description = description.replace(/^[.!?:;,\s]+/, '');
+      description = description.replace(/^[.!?:;,\s]+/, "");
     }
 
     return description;
@@ -641,8 +657,8 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
             title,
             content,
             urls,
-            tags
-          }
+            tags,
+          },
         );
       }
     }
@@ -654,8 +670,11 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
       ItemNature.UNCLEAR,
       DestinationType.REVIEW_LATER,
       {
-        content: input instanceof TextInputItem ? input.text : JSON.stringify(input.rawContent)
-      }
+        content:
+          input instanceof TextInputItem
+            ? input.text
+            : JSON.stringify(input.rawContent),
+      },
     );
   }
 
@@ -666,7 +685,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split('\n')[0].trim();
+    const firstLine = text.split("\n")[0].trim();
     if (firstLine && firstLine.length <= 100) {
       return firstLine;
     }
@@ -678,7 +697,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     }
 
     // If all else fails, truncate the text
-    return text.substring(0, 100).trim() + (text.length > 100 ? '...' : '');
+    return text.substring(0, 100).trim() + (text.length > 100 ? "..." : "");
   }
 
   /**
@@ -708,7 +727,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
       // #tag
       /#([a-zA-Z0-9_]+)/g,
       // tags: tag1, tag2, tag3
-      /tags:?\s+([^.]+)/i
+      /tags:?\s+([^.]+)/i,
     ];
 
     const tags = new Set<string>();
@@ -724,7 +743,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     // Extract tags from "tags:" section
     const tagsMatch = text.match(tagPatterns[1]);
     if (tagsMatch && tagsMatch[1]) {
-      const tagList = tagsMatch[1].split(',').map(tag => tag.trim());
+      const tagList = tagsMatch[1].split(",").map((tag) => tag.trim());
       for (const tag of tagList) {
         if (tag) {
           tags.add(tag);
@@ -748,7 +767,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
       content = text.substring(title.length).trim();
 
       // Remove any leading punctuation
-      content = content.replace(/^[.!?:;,\s]+/, '');
+      content = content.replace(/^[.!?:;,\s]+/, "");
     }
 
     return content;
@@ -764,13 +783,13 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
 
     // Check for reference indicators
     return (
-      lowerText.includes('fyi') ||
-      lowerText.includes('reference') ||
-      lowerText.includes('information') ||
-      lowerText.includes('note that') ||
-      lowerText.includes('article') ||
-      lowerText.includes('documentation') ||
-      lowerText.includes('resource')
+      lowerText.includes("fyi") ||
+      lowerText.includes("reference") ||
+      lowerText.includes("information") ||
+      lowerText.includes("note that") ||
+      lowerText.includes("article") ||
+      lowerText.includes("documentation") ||
+      lowerText.includes("resource")
     );
   }
 }
@@ -804,8 +823,8 @@ export class DefaultProcessor extends BaseInputProcessor {
         DestinationType.REVIEW_LATER,
         {
           title: input.title || this.generateTitle(input),
-          content: input.text
-        }
+          content: input.text,
+        },
       );
     }
 
@@ -816,8 +835,8 @@ export class DefaultProcessor extends BaseInputProcessor {
       DestinationType.REVIEW_LATER,
       {
         title: this.generateTitle(input),
-        content: JSON.stringify(input.rawContent)
-      }
+        content: JSON.stringify(input.rawContent),
+      },
     );
   }
 

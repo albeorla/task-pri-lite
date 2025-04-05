@@ -1,15 +1,15 @@
 /**
  * Storage Factory
- * 
+ *
  * Factory for creating storage services
  */
 
-import { IStorageService } from '../../core/interfaces/storage';
-import { FileStorageService, ExternalDataSourceService } from '../storage';
+import { IStorageService } from "../../core/interfaces/storage";
+import { FileStorageService, ExternalDataSourceService } from "../storage";
 
 export enum StorageType {
-  FILE = 'file',
-  EXTERNAL = 'external'
+  FILE = "file",
+  EXTERNAL = "external",
 }
 
 export interface StorageFactoryOptions {
@@ -28,16 +28,18 @@ export class StorageFactory {
   static createStorage(options: StorageFactoryOptions): IStorageService {
     switch (options.storageType) {
       case StorageType.FILE:
-        return new FileStorageService(options.fileStorageDir || './data');
-      
+        return new FileStorageService(options.fileStorageDir || "./data");
+
       case StorageType.EXTERNAL:
         return new ExternalDataSourceService({
-          outputDir: options.outputDir || './output'
+          outputDir: options.outputDir || "./output",
         });
-      
+
       default:
-        console.warn(`Unknown storage type: ${options.storageType}, falling back to FileStorageService`);
-        return new FileStorageService(options.fileStorageDir || './data');
+        console.warn(
+          `Unknown storage type: ${options.storageType}, falling back to FileStorageService`,
+        );
+        return new FileStorageService(options.fileStorageDir || "./data");
     }
   }
-} 
+}

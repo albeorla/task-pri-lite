@@ -9,23 +9,23 @@ import {
   IInputItem,
   IProcessedItem,
   IInputProcessor,
-  IDestinationHandler
-} from '../core/interfaces';
+  IDestinationHandler,
+} from "../core/interfaces";
 
 import {
   TaskDetectionProcessor,
   EventDetectionProcessor,
   ReferenceInfoProcessor,
-  DefaultProcessor
-} from '../processors/core-processors';
+  DefaultProcessor,
+} from "../processors/core-processors";
 
 import {
   TodoistHandler,
   CalendarHandler,
   MarkdownHandler,
   ReviewLaterHandler,
-  TrashHandler
-} from '../handlers/destination-handlers';
+  TrashHandler,
+} from "../handlers/destination-handlers";
 
 /**
  * Service responsible for processing input items
@@ -68,7 +68,7 @@ export class InputProcessingService {
       }
     }
 
-    throw new Error('No processor found that can handle the input');
+    throw new Error("No processor found that can handle the input");
   }
 }
 
@@ -105,7 +105,9 @@ export class OutputHandlingService {
    * @throws Error if no handler can handle the processed item
    */
   public async handleOutput(item: IProcessedItem): Promise<void> {
-    console.log(`Handling output with destination ${item.suggestedDestination}...`);
+    console.log(
+      `Handling output with destination ${item.suggestedDestination}...`,
+    );
 
     for (const handler of this.handlers) {
       if (handler.canHandle(item)) {
@@ -115,7 +117,7 @@ export class OutputHandlingService {
       }
     }
 
-    throw new Error('No handler found that can handle the processed item');
+    throw new Error("No handler found that can handle the processed item");
   }
 }
 
@@ -133,10 +135,12 @@ export class InputProcessingOrchestrator {
    */
   constructor(
     inputProcessingService?: InputProcessingService,
-    outputHandlingService?: OutputHandlingService
+    outputHandlingService?: OutputHandlingService,
   ) {
-    this.inputProcessingService = inputProcessingService || new InputProcessingService();
-    this.outputHandlingService = outputHandlingService || new OutputHandlingService();
+    this.inputProcessingService =
+      inputProcessingService || new InputProcessingService();
+    this.outputHandlingService =
+      outputHandlingService || new OutputHandlingService();
   }
 
   /**
@@ -146,22 +150,22 @@ export class InputProcessingOrchestrator {
    */
   public async processAndHandle(item: IInputItem): Promise<void> {
     try {
-      console.log('Starting processing and handling workflow...');
+      console.log("Starting processing and handling workflow...");
 
       // Process the input
       const processedItem = this.inputProcessingService.processInput(item);
 
-      console.log('Input processed successfully:', {
+      console.log("Input processed successfully:", {
         nature: processedItem.determinedNature,
-        destination: processedItem.suggestedDestination
+        destination: processedItem.suggestedDestination,
       });
 
       // Handle the processed item
       await this.outputHandlingService.handleOutput(processedItem);
 
-      console.log('Output handled successfully');
+      console.log("Output handled successfully");
     } catch (error) {
-      console.error('Error in processing and handling workflow:', error);
+      console.error("Error in processing and handling workflow:", error);
       throw error;
     }
   }

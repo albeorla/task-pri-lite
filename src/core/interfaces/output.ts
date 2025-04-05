@@ -1,10 +1,10 @@
 /**
  * Core Output Interfaces
- * 
+ *
  * This file defines the interfaces related to output handling
  */
 
-import { IProcessedItem } from './processing';
+import { IProcessedItem } from "./processing";
 
 /**
  * Interface for destination handlers (Strategy Pattern)
@@ -16,7 +16,7 @@ export interface IDestinationHandler {
    * @returns True if this handler can handle the processed item, false otherwise
    */
   canHandle(processedItem: IProcessedItem): boolean;
-  
+
   /**
    * Handles the processed item
    * @param processedItem The processed item to handle

@@ -1,14 +1,14 @@
 /**
  * External Data Source Service
- * 
+ *
  * Provides access to external data sources like Todoist and Google Calendar
  */
 
-import * as path from 'path';
-import { IStorageService } from '../../core/interfaces/storage';
-import { Task } from '../../core/models/task';
-import { Project } from '../../core/models/project';
-import { TodoistLoader, GoogleCalendarLoader } from './index';
+import * as path from "path";
+import { IStorageService } from "../../core/interfaces/storage";
+import { Task } from "../../core/models/task";
+import { Project } from "../../core/models/project";
+import { TodoistLoader, GoogleCalendarLoader } from "./index";
 
 export interface ExternalDataSourceOptions {
   todoistFilePath?: string;
@@ -32,13 +32,22 @@ export class ExternalDataSourceService implements IStorageService {
   private cachedData: Record<string, any> = {};
 
   constructor(options: ExternalDataSourceOptions = {}) {
-    this.outputDir = options.outputDir || './output';
-    const todoistFilePath = options.todoistFilePath || path.resolve(this.outputDir, 'todoist_export.json');
-    const calendarEventsFilePath = options.calendarEventsFilePath || path.resolve(this.outputDir, 'calendar_events.json');
-    const calendarTasksFilePath = options.calendarTasksFilePath || path.resolve(this.outputDir, 'calendar_tasks.json');
-    
+    this.outputDir = options.outputDir || "./output";
+    const todoistFilePath =
+      options.todoistFilePath ||
+      path.resolve(this.outputDir, "todoist_export.json");
+    const calendarEventsFilePath =
+      options.calendarEventsFilePath ||
+      path.resolve(this.outputDir, "calendar_events.json");
+    const calendarTasksFilePath =
+      options.calendarTasksFilePath ||
+      path.resolve(this.outputDir, "calendar_tasks.json");
+
     this.todoistLoader = new TodoistLoader(todoistFilePath);
-    this.calendarLoader = new GoogleCalendarLoader(calendarEventsFilePath, calendarTasksFilePath);
+    this.calendarLoader = new GoogleCalendarLoader(
+      calendarEventsFilePath,
+      calendarTasksFilePath,
+    );
   }
 
   /**
@@ -46,31 +55,33 @@ export class ExternalDataSourceService implements IStorageService {
    */
   async loadFromExternalSources(): Promise<ExternalDataSourceResult> {
     try {
-      console.log('Loading data from external sources...');
-      
+      console.log("Loading data from external sources...");
+
       // Load Todoist and Calendar data in parallel
       const [todoistData, calendarData] = await Promise.all([
         this.todoistLoader.load(),
-        this.calendarLoader.load()
+        this.calendarLoader.load(),
       ]);
-      
+
       // Combine data
       const allTasks = [...todoistData.tasks, ...calendarData.tasks];
       const allProjects = [...todoistData.projects]; // Calendar data doesn't have projects
-      
-      console.log(`Loaded ${allTasks.length} tasks and ${allProjects.length} projects from external sources`);
-      
+
+      console.log(
+        `Loaded ${allTasks.length} tasks and ${allProjects.length} projects from external sources`,
+      );
+
       // Cache the results
-      this.cachedData['tasks'] = allTasks;
-      this.cachedData['projects'] = allProjects;
-      this.cachedData['combined'] = { tasks: allTasks, projects: allProjects };
-      
+      this.cachedData["tasks"] = allTasks;
+      this.cachedData["projects"] = allProjects;
+      this.cachedData["combined"] = { tasks: allTasks, projects: allProjects };
+
       return {
         tasks: allTasks,
-        projects: allProjects
+        projects: allProjects,
       };
     } catch (error) {
-      console.error('Error loading data from external sources:', error);
+      console.error("Error loading data from external sources:", error);
       throw error;
     }
   }
@@ -81,7 +92,9 @@ export class ExternalDataSourceService implements IStorageService {
    * Save data to storage (not implemented for read-only external sources)
    */
   async save<T>(key: string, data: T): Promise<void> {
-    console.warn('ExternalDataSourceService is read-only, save operation not implemented');
+    console.warn(
+      "ExternalDataSourceService is read-only, save operation not implemented",
+    );
   }
 
   /**
@@ -95,15 +108,17 @@ export class ExternalDataSourceService implements IStorageService {
 
     // Otherwise, try to load all data and then return the requested key
     await this.loadFromExternalSources();
-    
-    return this.cachedData[key] as T || null;
+
+    return (this.cachedData[key] as T) || null;
   }
 
   /**
    * Delete data from storage (not implemented for read-only external sources)
    */
   async delete(key: string): Promise<void> {
-    console.warn('ExternalDataSourceService is read-only, delete operation not implemented');
+    console.warn(
+      "ExternalDataSourceService is read-only, delete operation not implemented",
+    );
   }
 
   /**
@@ -114,7 +129,7 @@ export class ExternalDataSourceService implements IStorageService {
     if (Object.keys(this.cachedData).length > 0) {
       return Object.keys(this.cachedData);
     }
-    
+
     // Otherwise, load the data first
     await this.loadFromExternalSources();
     return Object.keys(this.cachedData);
@@ -125,10 +140,10 @@ export class ExternalDataSourceService implements IStorageService {
    */
   async getCombinedData(): Promise<ExternalDataSourceResult> {
     // If we have cached combined data, return it
-    if (this.cachedData['combined']) {
-      return this.cachedData['combined'] as ExternalDataSourceResult;
+    if (this.cachedData["combined"]) {
+      return this.cachedData["combined"] as ExternalDataSourceResult;
     }
-    
+
     // Otherwise, load all data
     return this.loadFromExternalSources();
   }
@@ -138,10 +153,10 @@ export class ExternalDataSourceService implements IStorageService {
    */
   async getTasks(): Promise<Task[]> {
     // If we have cached tasks, return them
-    if (this.cachedData['tasks']) {
-      return this.cachedData['tasks'] as Task[];
+    if (this.cachedData["tasks"]) {
+      return this.cachedData["tasks"] as Task[];
     }
-    
+
     // Otherwise, load all data and return tasks
     const data = await this.loadFromExternalSources();
     return data.tasks;
@@ -152,12 +167,12 @@ export class ExternalDataSourceService implements IStorageService {
    */
   async getProjects(): Promise<Project[]> {
     // If we have cached projects, return them
-    if (this.cachedData['projects']) {
-      return this.cachedData['projects'] as Project[];
+    if (this.cachedData["projects"]) {
+      return this.cachedData["projects"] as Project[];
     }
-    
+
     // Otherwise, load all data and return projects
     const data = await this.loadFromExternalSources();
     return data.projects;
   }
-} 
+}
