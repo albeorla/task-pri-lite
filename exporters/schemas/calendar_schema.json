@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Google Calendar Export Schema",
+  "description": "Schema for exported Google Calendar events and tasks",
+  "type": "object",
+  "properties": {
+    "events": {
+      "type": "object",
+      "description": "Events organized by calendar name",
+      "additionalProperties": {
+        "type": "array",
+        "description": "List of events for a specific calendar",
+        "items": {
+          "type": "object",
+          "required": ["id", "summary", "status", "start"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for the event"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Event title/summary"
+            },
+            "description": {
+              "type": ["string", "null"],
+              "description": "Detailed description of the event"
+            },
+            "location": {
+              "type": ["string", "null"],
+              "description": "Event location"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["confirmed", "tentative", "cancelled"],
+              "description": "Status of the event"
+            },
+            "start": {
+              "type": "object",
+              "description": "Event start time",
+              "properties": {
+                "date": {
+                  "type": ["string", "null"],
+                  "format": "date",
+                  "description": "Start date in YYYY-MM-DD format (for all-day events)"
+                },
+                "dateTime": {
+                  "type": ["string", "null"],
+                  "format": "date-time",
+                  "description": "Start date and time in RFC3339 format (for non-all-day events)"
+                }
+              }
+            },
+            "end": {
+              "type": "object",
+              "description": "Event end time",
+              "properties": {
+                "date": {
+                  "type": ["string", "null"],
+                  "format": "date",
+                  "description": "End date in YYYY-MM-DD format (for all-day events)"
+                },
+                "dateTime": {
+                  "type": ["string", "null"],
+                  "format": "date-time",
+                  "description": "End date and time in RFC3339 format (for non-all-day events)"
+                }
+              }
+            },
+            "all_day": {
+              "type": "boolean",
+              "description": "Whether this is an all-day event"
+            },
+            "created": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the event was created"
+            },
+            "updated": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the event was last updated"
+            }
+          }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "description": "List of tasks/events formatted as tasks",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the task"
+          },
+          "title": {
+            "type": "string",
+            "description": "Task title"
+          },
+          "description": {
+            "type": ["string", "null"],
+            "description": "Detailed description of the task"
+          },
+          "calendar_id": {
+            "type": "string",
+            "description": "ID of the calendar this task belongs to"
+          },
+          "calendar_name": {
+            "type": "string",
+            "description": "Name of the calendar this task belongs to"
+          },
+          "due_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "description": "Due date in YYYY-MM-DD format"
+          },
+          "start_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "description": "Start date in YYYY-MM-DD format"
+          },
+          "is_all_day": {
+            "type": "boolean",
+            "description": "Whether this is an all-day task"
+          },
+          "location": {
+            "type": ["string", "null"],
+            "description": "Task location"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the task (active, completed, etc.)"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Task priority"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags/labels associated with the task"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to access the task"
+          }
+        }
+      }
+    }
+  }
+} 
