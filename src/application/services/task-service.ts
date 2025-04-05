@@ -24,7 +24,8 @@ export class TaskService {
       "getTasks" in this.storageService &&
       typeof this.storageService.getTasks === "function"
     ) {
-      return this.storageService.getTasks();
+      const tasks = await this.storageService.getTasks();
+      return tasks || [];
     }
 
     // Fall back to standard load
@@ -41,7 +42,8 @@ export class TaskService {
       "getProjects" in this.storageService &&
       typeof this.storageService.getProjects === "function"
     ) {
-      return this.storageService.getProjects();
+      const projects = await this.storageService.getProjects();
+      return projects || [];
     }
 
     // Fall back to standard load
