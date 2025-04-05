@@ -8,3 +8,4 @@ export * from './file-storage';
 export * from './todoist-loader';
 export * from './calendar-loader';
 export * from './schema-validator';
+export * from './external-data-source';

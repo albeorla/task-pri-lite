@@ -36,18 +36,18 @@
 **C. Implement TypeScript Core Application (File Reading)**
 
 - **Infrastructure Layer (`src/infrastructure/file_storage/`)**
-  - [ ] Define `IDataSource` interface in the Core layer (if not already present).
-  - [ ] Implement `FileStorageService` adapter adhering to `IDataSource`.
+  - [x] Define `IDataSource` interface in the Core layer (if not already present).
+  - [x] Implement `FileStorageService` adapter adhering to `IDataSource`.
   - [x] Implement `todoist_loader.ts`: Logic to read `todoist_export.json`.
   - [x] Implement `calendar_loader.ts`: Logic to read `calendar_*.json`.
   - [x] Integrate JSON schema validation within the loaders (using a TypeScript library).
   - [x] Implement data mapping logic to convert validated JSON into Core domain models (e.g., `Task`, `Project`).
   - [x] Add robust error handling (e.g., file not found, invalid JSON, schema validation failure).
 - **Application Layer Integration**
-  - [ ] Inject/provide `FileStorageService` to relevant Application Layer services/processors.
-  - [ ] Ensure Application Layer uses the `IDataSource` interface to fetch data.
+  - [x] Inject/provide `FileStorageService` to relevant Application Layer services/processors.
+  - [x] Ensure Application Layer uses the `IDataSource` interface to fetch data.
 - **Core Processing Logic**
-  - [ ] Verify existing GTD clarification and prioritization logic works correctly with data loaded from files.
+  - [x] Verify existing GTD clarification and prioritization logic works correctly with data loaded from files.
 
 **D. Project Setup & Structure**
 
@@ -63,9 +63,9 @@
 - [ ] Write unit tests for TypeScript data mapping logic.
 - [ ] Write integration tests for the P0 flow: Run Python exporter -> Verify JSON output -> Run TS App -> Verify core logic output.
 - [x] Document the defined JSON schemas.
-- [ ] Document how to set up credentials for Todoist and Google Calendar.
-- [ ] Document how to run the Python exporters manually.
-- [ ] Document how to run the TypeScript core application.
+- [x] Document how to set up credentials for Todoist and Google Calendar.
+- [x] Document how to run the Python exporters manually.
+- [x] Document how to run the TypeScript core application.
 
 ## **Phase 1 (P1): Automation & Consolidation**
 

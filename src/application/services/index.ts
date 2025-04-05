@@ -6,3 +6,4 @@
 
 export * from './input-processing';
 export * from './output-handling';
+export * from './task-service';

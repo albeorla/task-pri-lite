@@ -24,6 +24,8 @@ import { taskStore } from './storage/task-store';
 import { TimeBasedViewGenerator, TimeHorizon } from './outputs/time-based-views';
 import fs from 'fs';
 import path from 'path';
+import { TaskService } from './application/services';
+import { StorageFactory, StorageType } from './infrastructure/services';
 
 /**
  * Displays the help message
@@ -291,79 +293,48 @@ async function runExample(exampleNumber: number): Promise<void> {
   }
 }
 
-/**
- * Main function that parses command line arguments and executes the appropriate action
- */
-async function main(): Promise<void> {
-  // Get command line arguments
-  const args = process.argv.slice(2);
-  
-  // If no arguments, display help
-  if (args.length === 0) {
-    displayHelp();
-    return;
-  }
-  
-  // Parse command
-  const command = args[0].toLowerCase();
-  
-  // Execute command
-  switch (command) {
-    case 'example':
-      if (args.length < 2) {
-        console.error('Missing example number');
-        displayHelp();
-        return;
-      }
-      const exampleNumber = parseInt(args[1], 10);
-      await runExample(exampleNumber);
-      break;
+// Create the storage service and task service
+const storageService = StorageFactory.createStorage({
+  storageType: StorageType.EXTERNAL,
+  outputDir: './output'
+});
+
+const taskService = new TaskService(storageService);
+
+// Main function to run the application
+async function main() {
+  try {
+    console.log('Task Priority Lite - Starting...');
     
-    case 'examples':
-      await runAllExamples();
-      break;
+    // Load tasks from external sources
+    const tasks = await taskService.getAllTasks();
+    console.log(`Loaded ${tasks.length} tasks from external sources`);
     
-    case 'manual':
-      await processManualTask();
-      break;
+    // Load projects from external sources
+    const projects = await taskService.getAllProjects();
+    console.log(`Loaded ${projects.length} projects from external sources`);
     
-    case 'text':
-      await processTextInput();
-      break;
+    // Get incomplete tasks
+    const incompleteTasks = await taskService.getIncompleteTasks();
+    console.log(`Found ${incompleteTasks.length} incomplete tasks`);
     
-    case 'todoist':
-      if (args.length < 2) {
-        console.error('Missing file path');
-        displayHelp();
-        return;
-      }
-      const filePath = args[1];
-      await processTodoistExport(filePath);
-      break;
+    // Get next actions
+    const nextActions = await taskService.getNextActions();
+    console.log(`Found ${nextActions.length} next actions`);
     
-    case 'views':
-      if (args.length < 2) {
-        console.error('Missing time horizon');
-        displayHelp();
-        return;
-      }
-      const horizon = args[1];
-      await generateTimeBasedView(horizon);
-      break;
+    // Display next actions
+    if (nextActions.length > 0) {
+      console.log('\nNext actions:');
+      nextActions.forEach(task => {
+        console.log(`- [${task.project?.name || 'No project'}] ${task.description}`);
+      });
+    }
     
-    case 'help':
-      displayHelp();
-      break;
-    
-    default:
-      console.error(`Unknown command: ${command}`);
-      displayHelp();
-      break;
+    console.log('\nTask Priority Lite - Finished');
+  } catch (error) {
+    console.error('Error:', error);
   }
 }
 
-// Execute the main function
-main().catch(error => {
-  console.error('An error occurred:', error);
-  process.exit(1);
-});
+// Run the application
+main();

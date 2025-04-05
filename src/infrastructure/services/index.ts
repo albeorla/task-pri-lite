@@ -5,3 +5,4 @@
  */
 
 export * from './llm-service';
+export * from './storage-factory';
