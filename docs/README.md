@@ -1,162 +1,209 @@
-# Planning Data Exporter
+# Documentation Hub
 
-A command-line tool to export planning data in various formats with hierarchical structure.
+## Structure Overview
 
-## Features
-
-- **Hierarchical Export**: Export planning data with proper hierarchical relationships between projects, sections, tasks, and sub-tasks.
-- **Multiple Formats**: Export to JSON, Markdown, or CSV formats.
-- **Flexible Structure**: Choose between hierarchical or flat data structure.
-- **Backup**: Create complete backups of your planning data.
-- **Local Files**: Work with local JSON files instead of the API if needed.
-- **Clean Architecture**: Implemented using SOLID principles, protocols, and interfaces.
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.10 or higher
-- Poetry (dependency management)
-- Make (optional, for using the Makefile)
-- Todoist API token (for Todoist exporter)
-- Google Calendar API credentials (for Google Calendar exporter)
-
-### Installation
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/albeorla/planning-data-exporter.git
-   cd planning-data-exporter
-   ```
-
-2. Install dependencies:
-   ```bash
-   make install
-   # or directly: poetry install --with dev
-   ```
-
-3. Activate the virtual environment (optional):
-   ```bash
-   # If you want to activate the virtual environment directly
-   poetry shell
-
-   # Or you can run commands directly using poetry run
-   poetry run python --version
-   ```
-
-## Development Workflow (Using Makefile)
-
-```bash
-# Install dependencies (including dev dependencies)
-make install
-
-# Activate the virtual environment within your current shell
-make shell
-
-# Format code using Ruff
-make format
-
-# Lint code using Ruff
-make lint
-
-# Run static type checking using MyPy
-make mypy
-
-# Run tests using Pytest
-make test
-
-# Run tests with coverage report
-make test-cov
-
-# Run all checks (format, lint, mypy, test)
-make check
-
-# Clean build artifacts and cache files
-make clean
-
-# Clean everything including the virtual environment
-make clean-venv
-
-# Build the package (wheel and sdist)
-make build
+```
+/docs
+├── README.md                  # You are here
+├── product/
+│   ├── PRD.md                 # Product Requirements
+│   ├── ROADMAP.md             # Development Timeline
+│   └── releases/
+│       ├── RELEASE-p0.md      # Release Notes
+│       └── CHANGELOG.md       # Version History
+├── technical/
+│   ├── ARCHITECTURE.md        # System Design
+│   ├── API/                   # Interface Contracts
+│   ├── DEVELOPMENT.md         # Engineering Standards
+│   └── decisions/
+│       └── ADRs/              # Architecture Decisions
+└── guides/
+    └── onboarding.md          # Setup Guides
 ```
 
-## Usage
+## Document Templates
 
-### Google Calendar Setup
+### product/PRD.md
+````markdown
+# [Product Name] Requirements
 
-To use the Google Calendar exporter, you need to set up API credentials:
+## Overview
+**Problem Statement:**  
+[Clear description of user pain point]
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project
-3. Enable the Google Calendar API
-4. Create OAuth 2.0 credentials (Desktop application)
-5. Download the credentials.json file and place it in the `bin` directory as `google-client-secret.json`
+**Success Metrics:**
+- [Metric 1] improvement by X%
+- [Metric 2] reduction by Y%
 
-### Export Planning Data
+## User Stories
+| Priority | As a... | I want to... | So that... | Status |
+|----------|---------|--------------|------------|--------|
+| P0       | User    | Prioritize tasks | Focus on important work | ✅ Done |
 
-```bash
-# Export data from all sources
-planning-export export
-
-# Export data from Todoist only
-planning-export todoist
-
-# Export data from Google Calendar only
-planning-export gcal
-
-# Legacy Todoist export commands
-todoist-export export --api-token YOUR_API_TOKEN --output planning_data.json
-todoist-export export --api-token YOUR_API_TOKEN --output planning_data.md --format markdown
-todoist-export export --api-token YOUR_API_TOKEN --output planning_data --format csv
-todoist-export export --api-token YOUR_API_TOKEN --output planning_data.json --structure flat
-todoist-export export --input-file backup.json --output planning_data.md --format markdown
+## System Architecture
+```mermaid
+graph TD
+    A[User Input] --> B(Task Processor)
+    B --> C{Storage}
+    C --> D[(Database)]
 ```
 
-### Backup Planning Data
+## API Compatibility
+| Version | Changes | Supported Until |
+|---------|---------|-----------------|
+| v1.2    | Added filtering | 2025-Q1 |
+````
 
-```bash
-# Create a complete backup of your planning data
-todoist-export backup --api-token YOUR_API_TOKEN --output backup.json
+### product/ROADMAP.md
+````markdown
+# Product Roadmap
+
+## Current Quarter (2024-Q3)
+
+```mermaid
+gantt
+    title Feature Timeline
+    dateFormat  YYYY-MM-DD
+    section Core
+    Authentication       :active, auth, 2024-07-01, 30d
+    Task Processing      :crit, task, after auth, 45d
 ```
 
-### Output Files
+## OKRs
+| Objective | Key Result | Owner | Progress |
+|-----------|------------|-------|----------|
+| Improve Performance | Reduce latency <200ms | Backend | 75% ✅ |
+````
 
-The exporters generate the following output files:
+### product/releases/CHANGELOG.md
+````markdown
+# Version History
 
-- Todoist: `./output/todoist_export.json`
-- Google Calendar Events: `./output/calendar_events.json`
-- Google Calendar Tasks: `./output/calendar_tasks.json`
+## v1.2.0 - 2024-06-20
+### Added
+- Task filtering capability
+- Performance metrics dashboard
 
-### Environment Variables
+### Changed
+- **Breaking:** Updated auth token format
 
-You can configure the exporters using environment variables:
+## v1.1.0 - 2024-05-15
+- Initial public release
+````
 
-#### Todoist
+### technical/ARCHITECTURE.md
+````markdown
+# System Architecture
 
-- `TODOIST_API_TOKEN`: Your Todoist API token
+## Component Diagram
 
-#### Google Calendar
+```mermaid
+classDiagram
+    class TaskManager {
+        +processTask()
+        -validateInput()
+    }
+```
 
-- `GOOGLE_CREDENTIALS_FILE`: Path to the credentials.json file (default: "bin/google-client-secret.json")
-- `GOOGLE_TOKEN_FILE`: Path to save the token (default: "bin/google-token.json")
-- `GOOGLE_EVENTS_OUTPUT_FILE`: Path to save the events output (default: "output/calendar_events.json")
-- `GOOGLE_TASKS_OUTPUT_FILE`: Path to save the tasks output (default: "output/calendar_tasks.json")
+## Data Flow
+1. User submits task
+2. Validation layer checks format
+3. Processor prioritizes using ML model
+4. Stored in PostgreSQL DB
+````
 
-## Architecture
+### technical/API/SPECIFICATION.md
+````markdown
+# API Documentation
 
-This project follows clean architecture principles with a focus on SOLID design:
+## Endpoints
 
-- **Domain Layer**: Contains the core business logic and interfaces
-- **Application Layer**: Implements use cases using the domain interfaces
-- **Infrastructure Layer**: Provides concrete implementations of the interfaces
+```http
+POST /api/v1/tasks
+Content-Type: application/json
 
-Key design patterns used:
-- **Protocol/Interface Segregation**: Using protocols to define clear interfaces
-- **Dependency Inversion**: Depending on abstractions, not concrete implementations
-- **Strategy Pattern**: For different export formats and formatting strategies
-- **Repository Pattern**: For abstracting data access
+{
+  "title": "Review docs",
+  "priority": 2
+}
+```
 
-## License
+## Error Codes
+| Code | Meaning | Resolution |
+|------|---------|------------|
+| 429   | Rate limited | Retry after 60s |
+````
 
-MIT License
+### technical/DEVELOPMENT.md
+````markdown
+# Development Standards
+
+## Testing Requirements
+```yaml
+jest:
+  coverage:
+    statements: 80%
+    branches: 75%
+    functions: 85%
+```
+
+## Branch Naming
+```
+feat/123-add-filtering
+fix/456-auth-bug
+```
+````
+
+### technical/decisions/ADRs/001-clean-architecture.md
+````markdown
+# ADR 001: Clean Architecture Implementation
+
+## Context
+Needed to isolate business logic from framework dependencies
+
+## Options Considered
+1. Monolithic MVC ❌ Hard to test
+2. Clean Architecture ✅ Enables substitution of components
+
+## Consequences
+- + Independent component testing
+- - Initial setup complexity
+````
+
+### guides/onboarding.md
+````markdown
+# Onboarding Guide
+
+## Developer Setup
+1. Install [JDK 21](https://adoptium.net)
+2. Clone repo: `git clone [repo-url]`
+3. Run `npm ci`
+
+## Access Requests
+```table
+| Resource       | Form Link          | Approver       |
+|----------------|--------------------|----------------|
+| Prod Database  | [Internal Link]    | DevOps Lead    |
+```
+````
+
+## Navigation
+| Role          | Start With                 |
+|---------------|----------------------------|
+| New Developer | guides/onboarding.md       |
+| PM            | product/PRD.md             |
+| Architect     | technical/ARCHITECTURE.md  |
+```
+
+This README:
+- Uses GitHub/Mermaid-compatible markdown
+- Contains directly renderable templates
+- Maintains hierarchical structure
+- Includes both technical and product docs
+- Provides role-based entry points
+
+To use:
+1. Copy this entire file to `/docs/README.md`
+2. Create directories as shown
+3. Populate each template with your content
+4. Commit with message: "docs: Initialize documentation structure"
