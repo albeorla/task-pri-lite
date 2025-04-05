@@ -2,7 +2,7 @@
  * Schema validation utilities for JSON data.
  */
 
-import { Validator, ValidationError } from '@cfworker/json-schema';
+import { Validator } from '@cfworker/json-schema';
 import * as fs from 'fs';
 import * as path from 'path';
 

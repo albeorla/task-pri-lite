@@ -6,7 +6,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Task } from '../../core/models/task';
+import { Task, TaskStatus, EisenhowerQuadrant } from '../../core/models/task';
 import { Project } from '../../core/models/project';
 import { validateFile } from './schema-validator';
 
@@ -155,13 +155,13 @@ export class TodoistLoader {
         id: todoistTask.id,
         description: todoistTask.content,
         notes: todoistTask.description || '',
-        status: todoistTask.is_completed ? 'completed' : 'active',
+        status: todoistTask.is_completed ? TaskStatus.DONE : TaskStatus.INBOX,
         context: '', // Todoist doesn't have direct context mapping
         dueDate: todoistTask.due ? new Date(todoistTask.due.datetime || todoistTask.due.date) : undefined,
-        // Map Todoist priority (4=highest, 1=lowest) to Eisenhower quadrant (roughly)
-        eisenhowerQuadrant: todoistTask.priority >= 3 ? 'urgent-important' : 
-                            todoistTask.priority === 2 ? 'not-urgent-important' : 
-                            todoistTask.priority === 1 ? 'urgent-not-important' : 'not-urgent-not-important',
+        // Map Todoist priority (4=highest, 1=lowest) to Eisenhower quadrant
+        eisenhowerQuadrant: todoistTask.priority >= 3 ? EisenhowerQuadrant.DO : 
+                            todoistTask.priority === 2 ? EisenhowerQuadrant.DECIDE : 
+                            todoistTask.priority === 1 ? EisenhowerQuadrant.DELEGATE : EisenhowerQuadrant.DELETE,
         isActionable: true, // Assume all Todoist tasks are actionable
         creationDate: new Date(todoistTask.created_at),
       });
@@ -257,8 +257,11 @@ export class TodoistLoader {
     for (const project of todoistData.projects) {
       collectTasks(project.tasks);
       
-      for (const section of project.sections) {
-        collectTasks(section.tasks);
+      // Check if the project has sections and they are iterable
+      if (project.sections && Array.isArray(project.sections)) {
+        for (const section of project.sections) {
+          collectTasks(section.tasks);
+        }
       }
     }
     

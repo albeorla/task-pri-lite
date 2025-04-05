@@ -1,61 +1,78 @@
 /**
- * Unit tests for Schema Validator
+ * Unit tests for schema validator
  */
 
+import { loadSchema, validateData, validateFile } from '../schema-validator';
 import * as fs from 'fs';
-import { validateData, validateFile, loadSchema } from '../schema-validator';
+import * as path from 'path';
 import { Validator } from '@cfworker/json-schema';
 
-// Mock fs module
-jest.mock('fs', () => ({
-  readFileSync: jest.fn(),
-  existsSync: jest.fn()
-}));
+// Mock fs and path modules
+jest.mock('fs');
+jest.mock('path');
 
-// Mock @cfworker/json-schema
+// Mock Validator
 jest.mock('@cfworker/json-schema', () => ({
   Validator: jest.fn().mockImplementation(() => ({
-    validate: jest.fn()
+    validate: jest.fn().mockImplementation((data) => {
+      // Simple validation logic for testing
+      if (data.name === 'Test') {
+        return { valid: true, errors: [] };
+      } else {
+        return {
+          valid: false,
+          errors: [{ instanceLocation: '/name', error: 'Must be a string' }]
+        };
+      }
+    })
   }))
 }));
 
 describe('Schema Validator', () => {
-  // Mock schema data
-  const mockSchema = {
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'object',
-    properties: {
-      test: { type: 'string' }
-    }
+  // Test data
+  const validData = {
+    name: 'Test',
+    value: 123
   };
 
-  // Valid and invalid data for testing
-  const validData = { test: 'valid string' };
-  const invalidData = { test: 123 };
+  const invalidData = {
+    name: 123, // Should be a string
+    value: 123
+  };
 
+  const mockSchema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      value: { type: 'number' }
+    },
+    required: ['name']
+  };
+
+  // Reset mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock path.join implementation
+    (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
+    // Mock path.resolve implementation
+    (path.resolve as jest.Mock).mockReturnValue('/schemas');
     
-    // Mock implementation for fs functions
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockSchema));
-    
-    // Mock the Validator implementation
-    const mockValidate = jest.fn().mockImplementation((data) => {
-      if (data.test === 'valid string') {
-        return { valid: true, errors: [] };
+    // Mock fs.readFileSync for schema files
+    (fs.readFileSync as jest.Mock).mockImplementation((filePath) => {
+      if (filePath.includes('nonexistent')) {
+        const error = new Error('ENOENT: file not found') as NodeJS.ErrnoException;
+        error.code = 'ENOENT';
+        throw error;
+      } else if (filePath.includes('invalid')) {
+        return 'invalid json';
       } else {
-        return { valid: false, errors: [{ instanceLocation: '/test', error: 'Must be a string' }] };
+        return JSON.stringify(mockSchema);
       }
     });
-    
-    (Validator as jest.Mock).mockImplementation(() => ({
-      validate: mockValidate
-    }));
   });
 
   describe('loadSchema', () => {
-    it('should load schema from file path with .json extension', () => {
+    it('should load schema from file path', () => {
       const schemaName = 'test.json';
       const result = loadSchema(schemaName);
       
@@ -72,14 +89,12 @@ describe('Schema Validator', () => {
     });
 
     it('should throw an error if schema file does not exist', () => {
-      (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
       const schemaName = 'nonexistent.json';
       
       expect(() => loadSchema(schemaName)).toThrow('Schema file not found');
     });
 
     it('should throw an error if schema file contains invalid JSON', () => {
-      (fs.readFileSync as jest.Mock).mockReturnValueOnce('invalid json');
       const schemaName = 'invalid.json';
       
       expect(() => loadSchema(schemaName)).toThrow(expect.any(Error));
@@ -105,7 +120,6 @@ describe('Schema Validator', () => {
     });
 
     it('should return error result if schema cannot be loaded', () => {
-      (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
       const result = validateData(validData, 'nonexistent.json');
       
       expect(result.valid).toBe(false);
@@ -116,18 +130,38 @@ describe('Schema Validator', () => {
 
   describe('validateFile', () => {
     beforeEach(() => {
-      // Mock implementation for fs.readFileSync for file contents
-      (fs.readFileSync as jest.Mock).mockImplementation((path) => {
-        if (path.includes('valid')) {
+      // Mock fs.readFileSync for file contents with a more specific implementation
+      (fs.readFileSync as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.includes('nonexistent')) {
+          const error = new Error('ENOENT: file not found') as NodeJS.ErrnoException;
+          error.code = 'ENOENT';
+          throw error;
+        } else if (filePath.includes('valid.json')) {
           return JSON.stringify(validData);
-        } else if (path.includes('invalid')) {
-          return JSON.stringify(invalidData);
-        } else if (path.includes('schema')) {
+        } else if (filePath.includes('invalid.json')) {
+          return JSON.stringify({ name: 123 }); // This is the invalid data
+        } else if (filePath.includes('bad-json.json')) {
+          return 'invalid json';
+        } else if (filePath.includes('.json')) {
           return JSON.stringify(mockSchema);
         } else {
-          throw new Error('File not found');
+          throw new Error('Unknown file');
         }
       });
+      
+      // Create a more specific mock for the Validator that responds based on the content
+      (Validator as jest.Mock).mockImplementation(() => ({
+        validate: jest.fn().mockImplementation((data) => {
+          if (data && data.name === 'Test') {
+            return { valid: true, errors: [] };
+          } else {
+            return {
+              valid: false,
+              errors: [{ instanceLocation: '/name', error: 'Must be a string' }]
+            };
+          }
+        })
+      }));
     });
 
     it('should validate file content against schema and return valid result', () => {
@@ -139,6 +173,13 @@ describe('Schema Validator', () => {
     });
 
     it('should validate file content against schema and return errors for invalid content', () => {
+      // Override the validate mock for this specific test to return invalid result
+      const mockValidateResult = { valid: false, errors: [{ instanceLocation: '/name', error: 'Must be a string' }] };
+      const mockValidate = jest.fn().mockReturnValue(mockValidateResult);
+      
+      // Override the Validator mock for this test
+      (Validator as jest.Mock).mockImplementationOnce(() => ({ validate: mockValidate }));
+      
       const result = validateFile('invalid.json', 'test.json');
       
       expect(fs.readFileSync).toHaveBeenCalled();
@@ -147,7 +188,6 @@ describe('Schema Validator', () => {
     });
 
     it('should return error if file does not exist', () => {
-      (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
       const result = validateFile('nonexistent.json', 'test.json');
       
       expect(result.valid).toBe(false);
@@ -156,7 +196,6 @@ describe('Schema Validator', () => {
     });
 
     it('should return error if file contains invalid JSON', () => {
-      (fs.readFileSync as jest.Mock).mockReturnValueOnce('invalid json');
       const result = validateFile('bad-json.json', 'test.json');
       
       expect(result.valid).toBe(false);

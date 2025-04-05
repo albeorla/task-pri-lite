@@ -57,11 +57,11 @@
 
 **E. Testing & Documentation (P0)**
 
-- [ ] Write unit tests for Python exporter data transformation (`converter.py`).
-- [ ] Write unit tests for Python exporter API interaction (`adapter.py` - potentially mocked).
-- [ ] Write unit tests for TypeScript file loaders and JSON validation.
-- [ ] Write unit tests for TypeScript data mapping logic.
-- [ ] Write integration tests for the P0 flow: Run Python exporter -> Verify JSON output -> Run TS App -> Verify core logic output.
+- [x] Write unit tests for Python exporter data transformation (`converter.py`).
+- [x] Write unit tests for Python exporter API interaction (`adapter.py` - potentially mocked).
+- [x] Write unit tests for TypeScript file loaders and JSON validation.
+- [x] Write unit tests for TypeScript data mapping logic.
+- [x] Write integration tests for the P0 flow: Run Python exporter -> Verify JSON output -> Run TS App -> Verify core logic output.
 - [x] Document the defined JSON schemas.
 - [x] Document how to set up credentials for Todoist and Google Calendar.
 - [x] Document how to run the Python exporters manually.

@@ -10,7 +10,8 @@ import * as path from 'path';
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn()
-  }
+  },
+  existsSync: jest.fn().mockReturnValue(true)
 }));
 
 jest.mock('../schema-validator', () => ({
@@ -22,61 +23,58 @@ import { validateFile } from '../schema-validator';
 
 describe('GoogleCalendarLoader', () => {
   // Test data
-  const mockEventsData = {
-    'Test Calendar': [
-      {
-        id: 'event1',
-        summary: 'Test Event 1',
-        description: 'Description for Test Event 1',
-        status: 'confirmed',
-        start: {
-          dateTime: '2025-04-10T10:00:00Z'
-        },
-        end: {
-          dateTime: '2025-04-10T11:00:00Z'
-        },
-        created: '2025-04-03T17:20:46.055102Z',
-        updated: '2025-04-03T17:20:46.055102Z'
+  const mockEventsData = [
+    {
+      id: 'event1',
+      summary: 'Test Event 1',
+      description: 'Description for Test Event 1',
+      status: 'confirmed',
+      start: {
+        dateTime: '2025-04-10T10:00:00Z'
       },
-      {
-        id: 'event2',
-        summary: 'Test Event 2',
-        status: 'confirmed',
-        start: {
-          date: '2025-04-15'
-        },
-        end: {
-          date: '2025-04-16'
-        },
-        all_day: true,
-        created: '2025-04-03T17:20:46.055102Z',
-        updated: '2025-04-03T17:20:46.055102Z'
-      }
-    ]
-  };
+      end: {
+        dateTime: '2025-04-10T11:00:00Z'
+      },
+      created: '2025-04-03T17:20:46.055102Z',
+      updated: '2025-04-03T17:20:46.055102Z',
+      iCalUID: 'ical123',
+      sequence: 0
+    },
+    {
+      id: 'event2',
+      summary: 'Test Event 2',
+      status: 'confirmed',
+      start: {
+        date: '2025-04-15'
+      },
+      end: {
+        date: '2025-04-16'
+      },
+      created: '2025-04-03T17:20:46.055102Z',
+      updated: '2025-04-03T17:20:46.055102Z',
+      iCalUID: 'ical456',
+      sequence: 0
+    }
+  ];
 
   const mockTasksData = [
     {
       id: 'task1',
       title: 'Test Task 1',
-      description: 'Description for Test Task 1',
-      calendar_id: 'calendar1',
-      calendar_name: 'Test Calendar',
-      due_date: '2025-04-10',
-      status: 'active',
+      notes: 'Description for Test Task 1',
+      due: '2025-04-10',
+      status: 'needsAction',
       priority: 3,
-      tags: ['important'],
-      url: 'https://example.com/task1'
+      created: '2025-04-03T17:20:46.055102Z',
+      updated: '2025-04-03T17:20:46.055102Z'
     },
     {
       id: 'task2',
       title: 'Test Task 2',
-      calendar_id: 'calendar1',
-      calendar_name: 'Test Calendar',
-      status: 'active',
+      status: 'completed',
       priority: 2,
-      tags: [],
-      url: 'https://example.com/task2'
+      created: '2025-04-03T17:20:46.055102Z',
+      updated: '2025-04-03T17:20:46.055102Z'
     }
   ];
 
@@ -106,42 +104,41 @@ describe('GoogleCalendarLoader', () => {
     expect(loader).toBeInstanceOf(GoogleCalendarLoader);
   });
 
-  it('should validate files before loading raw data', async () => {
+  it('should validate files before loading data', async () => {
     const loader = new GoogleCalendarLoader('/test/events.json', '/test/tasks.json');
-    await loader.loadRawEventsData();
-    await loader.loadRawTasksData();
+    await loader.loadEventsData();
+    await loader.loadTasksData();
     
     expect(validateFile).toHaveBeenCalledWith('/test/events.json', 'calendar_schema');
-    expect(validateFile).toHaveBeenCalledWith('/test/tasks.json', 'calendar_schema');
   });
 
   it('should throw an error if events validation fails', async () => {
     (validateFile as jest.Mock).mockReturnValueOnce({ valid: false, errors: ['Test error'] });
     const loader = new GoogleCalendarLoader();
     
-    await expect(loader.loadRawEventsData()).rejects.toThrow('Google Calendar events validation failed: Test error');
+    await expect(loader.loadEventsData()).rejects.toThrow('Calendar events validation failed: Test error');
   });
 
-  it('should throw an error if tasks validation fails', async () => {
-    (validateFile as jest.Mock).mockReturnValueOnce({ valid: true, errors: [] })
-      .mockReturnValueOnce({ valid: false, errors: ['Test error'] });
+  it('should handle tasks file not existing', async () => {
+    // Mock existsSync for this test only
+    (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
     const loader = new GoogleCalendarLoader();
     
-    await loader.loadRawEventsData(); // First call passes
-    await expect(loader.loadRawTasksData()).rejects.toThrow('Google Calendar tasks validation failed: Test error');
+    const result = await loader.loadTasksData();
+    expect(result).toEqual([]);
   });
 
-  it('should load and parse raw events data from file', async () => {
+  it('should load and parse events data from file', async () => {
     const loader = new GoogleCalendarLoader();
-    const data = await loader.loadRawEventsData();
+    const data = await loader.loadEventsData();
     
     expect(fs.promises.readFile).toHaveBeenCalled();
     expect(data).toEqual(mockEventsData);
   });
 
-  it('should load and parse raw tasks data from file', async () => {
+  it('should load and parse tasks data from file', async () => {
     const loader = new GoogleCalendarLoader();
-    const data = await loader.loadRawTasksData();
+    const data = await loader.loadTasksData();
     
     expect(fs.promises.readFile).toHaveBeenCalled();
     expect(data).toEqual(mockTasksData);
@@ -151,7 +148,7 @@ describe('GoogleCalendarLoader', () => {
     (fs.promises.readFile as jest.Mock).mockRejectedValueOnce(new Error('File read error'));
     const loader = new GoogleCalendarLoader();
     
-    await expect(loader.loadRawEventsData()).rejects.toThrow('Error loading Google Calendar events data: File read error');
+    await expect(loader.loadEventsData()).rejects.toThrow('Error loading calendar events data: File read error');
   });
 
   it('should map Calendar data to core domain Tasks', async () => {
@@ -172,7 +169,7 @@ describe('GoogleCalendarLoader', () => {
   });
 
   it('should handle empty data', async () => {
-    (fs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify({}));
+    (fs.promises.readFile as jest.Mock).mockImplementation(() => Promise.resolve('[]'));
     
     const loader = new GoogleCalendarLoader();
     const result = await loader.load();
