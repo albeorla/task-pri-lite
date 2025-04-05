@@ -5,13 +5,20 @@
  */
 
 import { 
-  IProcessedItem,
-  DestinationType
+  IProcessedItem
 } from '../core/interfaces';
+import { DestinationType } from '../core/types/enums';
 
-import {
-  BaseDestinationHandler
-} from '../abstracts/base-classes';
+/**
+ * Base class for destination handlers
+ */
+export abstract class BaseDestinationHandler {
+  protected destinationType: DestinationType;
+  
+  constructor(destinationType: DestinationType) {
+    this.destinationType = destinationType;
+  }
+}
 
 /**
  * Handler for tasks to be added to Todoist
@@ -23,6 +30,15 @@ export class TodoistHandler extends BaseDestinationHandler {
    */
   constructor() {
     super(DestinationType.TODOIST);
+  }
+  
+  /**
+   * Determines if this handler can handle the given processed item
+   * @param processedItem The processed item to check
+   * @returns True if this handler can handle the processed item, false otherwise
+   */
+  public canHandle(processedItem: IProcessedItem): boolean {
+    return processedItem.suggestedDestination === DestinationType.TODOIST;
   }
   
   /**
@@ -105,6 +121,15 @@ export class CalendarHandler extends BaseDestinationHandler {
    */
   constructor() {
     super(DestinationType.CALENDAR);
+  }
+  
+  /**
+   * Determines if this handler can handle the given processed item
+   * @param processedItem The processed item to check
+   * @returns True if this handler can handle the processed item, false otherwise
+   */
+  public canHandle(processedItem: IProcessedItem): boolean {
+    return processedItem.suggestedDestination === DestinationType.CALENDAR;
   }
   
   /**
@@ -242,6 +267,15 @@ export class MarkdownHandler extends BaseDestinationHandler {
   }
   
   /**
+   * Determines if this handler can handle the given processed item
+   * @param processedItem The processed item to check
+   * @returns True if this handler can handle the processed item, false otherwise
+   */
+  public canHandle(processedItem: IProcessedItem): boolean {
+    return processedItem.suggestedDestination === DestinationType.MARKDOWN;
+  }
+  
+  /**
    * Handles a processed item by formatting it for Markdown
    * @param processedItem The processed item to handle
    * @returns A promise that resolves when the handling is complete
@@ -314,6 +348,15 @@ export class ReviewLaterHandler extends BaseDestinationHandler {
   }
   
   /**
+   * Determines if this handler can handle the given processed item
+   * @param processedItem The processed item to check
+   * @returns True if this handler can handle the processed item, false otherwise
+   */
+  public canHandle(processedItem: IProcessedItem): boolean {
+    return processedItem.suggestedDestination === DestinationType.REVIEW_LATER;
+  }
+  
+  /**
    * Handles a processed item by notifying the user
    * @param processedItem The processed item to handle
    * @returns A promise that resolves when the handling is complete
@@ -367,6 +410,15 @@ export class TrashHandler extends BaseDestinationHandler {
    */
   constructor() {
     super(DestinationType.NONE);
+  }
+  
+  /**
+   * Determines if this handler can handle the given processed item
+   * @param processedItem The processed item to check
+   * @returns True if this handler can handle the processed item, false otherwise
+   */
+  public canHandle(processedItem: IProcessedItem): boolean {
+    return processedItem.suggestedDestination === DestinationType.NONE;
   }
   
   /**
