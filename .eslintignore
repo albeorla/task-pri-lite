@@ -1,0 +1,11 @@
+# Build artifacts
+dist/
+coverage/
+node_modules/
+
+# Configuration files
+jest.config.js
+*.js
+
+# Generated files
+*.d.ts 
