@@ -19,8 +19,8 @@ export interface TaskItem {
   dueDate: Date | null;
   priority: number; // 0=highest, 3=lowest
   project?: string;
-  section?: string;
-  parentTask?: string;
+  section?: string | undefined;
+  parentTask?: string | undefined;
   labels?: string[];
   completed: boolean;
 }

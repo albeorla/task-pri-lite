@@ -118,20 +118,17 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
   private extractTitle(text: string): string {
     // Try to get the first line
     const lines = text.split("\n");
-    if (lines.length > 0) {
-      const firstLine = lines[0].trim();
-      if (firstLine && firstLine.length <= 100) {
-        return firstLine;
-      }
+    const firstLine = lines && lines.length > 0 ? lines[0]?.trim() : "";
+    if (firstLine && firstLine.length <= 100) {
+      return firstLine;
     }
 
     // If first line is too long, try to get the first sentence
     const sentences = text.split(/[.!?]/);
-    if (sentences.length > 0) {
-      const firstSentence = sentences[0].trim();
-      if (firstSentence && firstSentence.length <= 100) {
-        return firstSentence;
-      }
+    const firstSentence =
+      sentences && sentences.length > 0 ? sentences[0]?.trim() : "";
+    if (firstSentence && firstSentence.length <= 100) {
+      return firstSentence;
     }
 
     // If all else fails, truncate the text
@@ -338,13 +335,13 @@ export class EventDetectionProcessor extends BaseInputProcessor {
           },
         );
       }
-      
+
       // Check if the text contains event-related keywords even if no date was detected
       if (this.containsEventKeywords(text)) {
         const defaultStartDateTime = new Date(); // Default to today if no date found
         const defaultEndDateTime = new Date(defaultStartDateTime);
         defaultEndDateTime.setHours(defaultEndDateTime.getHours() + 1); // Default to 1 hour later
-        
+
         return new BaseProcessedItem(
           input,
           ItemNature.POTENTIAL_EVENT,
@@ -392,9 +389,9 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       "workshop",
       "session",
     ];
-    
+
     const lowerText = text.toLowerCase();
-    return eventKeywords.some(keyword => lowerText.includes(keyword));
+    return eventKeywords.some((keyword) => lowerText.includes(keyword));
   }
 
   /**
@@ -405,20 +402,17 @@ export class EventDetectionProcessor extends BaseInputProcessor {
   private extractTitle(text: string): string {
     // Try to get the first line
     const lines = text.split("\n");
-    if (lines.length > 0) {
-      const firstLine = lines[0].trim();
-      if (firstLine && firstLine.length <= 100) {
-        return firstLine;
-      }
+    const firstLine = lines && lines.length > 0 ? lines[0]?.trim() : "";
+    if (firstLine && firstLine.length <= 100) {
+      return firstLine;
     }
 
     // If first line is too long, try to get the first sentence
     const sentences = text.split(/[.!?]/);
-    if (sentences.length > 0) {
-      const firstSentence = sentences[0].trim();
-      if (firstSentence && firstSentence.length <= 100) {
-        return firstSentence;
-      }
+    const firstSentence =
+      sentences && sentences.length > 0 ? sentences[0]?.trim() : "";
+    if (firstSentence && firstSentence.length <= 100) {
+      return firstSentence;
     }
 
     // If all else fails, truncate the text
@@ -464,8 +458,9 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             // Try to parse the time
             const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
-              const { hours, minutes, ampm } = this.parseTimeParts(timeParts);
-              if (hours !== null && minutes !== null && ampm !== null) {
+              const parsedTime = this.parseTimeParts(timeParts);
+              if (parsedTime) {
+                const { hours, minutes } = parsedTime;
                 date.setHours(hours, minutes, 0, 0);
                 return date;
               }
@@ -482,8 +477,9 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             // Try to parse the time
             const timeParts = match[1].match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
-              const { hours, minutes, ampm } = this.parseTimeParts(timeParts);
-              if (hours !== null && minutes !== null && ampm !== null) {
+              const parsedTime = this.parseTimeParts(timeParts);
+              if (parsedTime) {
+                const { hours, minutes } = parsedTime;
                 today.setHours(hours, minutes, 0, 0);
                 return today;
               }
@@ -502,26 +498,28 @@ export class EventDetectionProcessor extends BaseInputProcessor {
   /**
    * Fix for the parsing time parts with proper null checks
    */
-  private parseTimeParts(timeParts: RegExpMatchArray | null): { hours: number, minutes: number, ampm: string | null } | null {
+  private parseTimeParts(
+    timeParts: RegExpMatchArray | null,
+  ): { hours: number; minutes: number; ampm: string | null } | null {
     if (!timeParts || timeParts.length < 3) {
       return null;
     }
-    
+
     // Safely get values with nullish coalescing defaults
-    const hourStr = timeParts[1] || '0';
-    const minuteStr = timeParts[2] || '0';
+    const hourStr = timeParts[1] || "0";
+    const minuteStr = timeParts[2] || "0";
     const ampm = timeParts[3]?.toLowerCase() || null;
-    
+
     let hours = parseInt(hourStr, 10);
     const minutes = parseInt(minuteStr, 10);
-    
+
     // Adjust hours for AM/PM
     if (ampm === "pm" && hours < 12) {
       hours += 12;
     } else if (ampm === "am" && hours === 12) {
       hours = 0;
     }
-    
+
     return { hours, minutes, ampm };
   }
 
@@ -555,13 +553,17 @@ export class EventDetectionProcessor extends BaseInputProcessor {
         try {
           // Try to parse the time
           const timeParts = match[1].match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
-          if (timeParts) {
+          if (timeParts && timeParts.length >= 3) {
             // Create a copy of the start date/time
             const endDateTime = new Date(startDateTime.getTime());
 
-            let hours = parseInt(timeParts[1]);
-            const minutes = parseInt(timeParts[2]);
+            // Safely get values
+            const hourStr = timeParts[1] || "0";
+            const minuteStr = timeParts[2] || "0";
             const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
+
+            let hours = parseInt(hourStr, 10);
+            const minutes = parseInt(minuteStr, 10);
 
             // Adjust hours for AM/PM
             if (ampm === "pm" && hours < 12) {
@@ -753,20 +755,17 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
   private extractTitle(text: string): string {
     // Try to get the first line
     const lines = text.split("\n");
-    if (lines.length > 0) {
-      const firstLine = lines[0].trim();
-      if (firstLine && firstLine.length <= 100) {
-        return firstLine;
-      }
+    const firstLine = lines && lines.length > 0 ? lines[0]?.trim() : "";
+    if (firstLine && firstLine.length <= 100) {
+      return firstLine;
     }
 
     // If first line is too long, try to get the first sentence
     const sentences = text.split(/[.!?]/);
-    if (sentences.length > 0) {
-      const firstSentence = sentences[0].trim();
-      if (firstSentence && firstSentence.length <= 100) {
-        return firstSentence;
-      }
+    const firstSentence =
+      sentences && sentences.length > 0 ? sentences[0]?.trim() : "";
+    if (firstSentence && firstSentence.length <= 100) {
+      return firstSentence;
     }
 
     // If all else fails, truncate the text
@@ -806,7 +805,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     const tags = new Set<string>();
 
     // Extract hashtags
-    const hashtagMatches = text.match(tagPatterns[0]);
+    const hashtagMatches = text.match(tagPatterns[0] as RegExp); // Cast to RegExp
     if (hashtagMatches) {
       for (const match of hashtagMatches) {
         tags.add(match.substring(1));
@@ -814,7 +813,7 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
     }
 
     // Extract tags from "tags:" section
-    const tagsMatch = text.match(tagPatterns[1]);
+    const tagsMatch = text.match(tagPatterns[1] as RegExp); // Cast to RegExp
     if (tagsMatch && tagsMatch[1]) {
       const tagList = tagsMatch[1].split(",").map((tag) => tag.trim());
       for (const tag of tagList) {

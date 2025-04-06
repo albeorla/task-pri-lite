@@ -200,26 +200,28 @@ export class GoogleCalendarLoader {
    * @param event - The calendar event to convert
    * @returns A task representing the event
    */
-  private eventToTask(event: CalendarEvent): Task {
-    // Determine if this is a task-like event
-    // For example, events that use specific keywords or formatting
-    const isTaskLike = this.isEventLikelyTask(event);
+  private convertEventToTask(event: any): Task {
+    // Extract start date/time
+    let startDate: Date | null = null;
+    if (event.start) {
+      if (event.start.dateTime) {
+        startDate = new Date(event.start.dateTime);
+      } else if (event.start.date) {
+        startDate = new Date(event.start.date);
+      }
+    }
 
-    // Extract date information
-    const startDate = event.start.dateTime
-      ? new Date(event.start.dateTime)
-      : event.start.date
-        ? new Date(event.start.date)
-        : undefined;
+    // Determine if the event is task-like (e.g., has "TODO" or "Task" in the title)
+    const isTaskLike =
+      event.summary && /task|todo|action|remind(?:er)?/i.test(event.summary);
 
-    // Create the task
     const task = new Task({
       id: event.id,
       description: event.summary,
       notes: event.description || "",
       status: TaskStatus.INBOX, // Default status for events
       context: event.location || "",
-      dueDate: startDate,
+      dueDate: startDate, // Use the start date of the event as the due date
       // Events are typically important but not urgent unless they're happening today/tomorrow
       eisenhowerQuadrant: EisenhowerQuadrant.DECIDE,
       isActionable: isTaskLike, // Only task-like events are directly actionable
@@ -235,69 +237,51 @@ export class GoogleCalendarLoader {
    * @param calendarTask - The calendar task to convert
    * @returns A task representing the calendar task
    */
-  private calendarTaskToTask(calendarTask: CalendarTask): Task {
-    // Determine status
-    let status = TaskStatus.INBOX;
-
-    if (calendarTask.status === "completed") {
-      status = TaskStatus.DONE;
-    } else if (calendarTask.status === "needsAction") {
-      status = TaskStatus.NEXT_ACTION;
+  private convertCalendarTaskToTask(calendarTask: any): Task {
+    // Parse the due date if present
+    let dueDate: Date | null = null;
+    if (calendarTask.due) {
+      dueDate = new Date(calendarTask.due);
     }
 
-    // Map priority to Eisenhower quadrant
-    let eisenhowerQuadrant = EisenhowerQuadrant.DECIDE; // Default to Q2
-
-    if (calendarTask.priority) {
-      if (calendarTask.priority > 7) {
-        eisenhowerQuadrant = EisenhowerQuadrant.DO; // Q1: Urgent & Important
-      } else if (calendarTask.priority > 5) {
-        eisenhowerQuadrant = EisenhowerQuadrant.DELEGATE; // Q3: Urgent & Not Important
-      } else if (calendarTask.priority > 3) {
-        eisenhowerQuadrant = EisenhowerQuadrant.DECIDE; // Q2: Not Urgent & Important
-      } else {
-        eisenhowerQuadrant = EisenhowerQuadrant.DELETE; // Q4: Not Urgent & Not Important
+    // Map Google Task status to our TaskStatus
+    const getTaskStatus = (status: string): TaskStatus => {
+      switch (status.toLowerCase()) {
+        case "completed":
+          return TaskStatus.DONE;
+        case "needsaction":
+          return TaskStatus.NEXT_ACTION;
+        default:
+          return TaskStatus.INBOX;
       }
-    }
+    };
 
-    // Create the task
+    // Map Google Task priority to Eisenhower quadrant
+    const getEisenhowerQuadrant = (priority: number): EisenhowerQuadrant => {
+      switch (priority) {
+        case 1: // High priority
+          return EisenhowerQuadrant.DO;
+        case 2: // Medium priority
+          return EisenhowerQuadrant.DECIDE;
+        case 3: // Low priority
+          return EisenhowerQuadrant.DELEGATE;
+        default:
+          return EisenhowerQuadrant.DELETE;
+      }
+    };
+
     const task = new Task({
       id: calendarTask.id,
       description: calendarTask.title,
       notes: calendarTask.notes || "",
-      status: status,
-      dueDate: calendarTask.due ? new Date(calendarTask.due) : undefined,
-      eisenhowerQuadrant: eisenhowerQuadrant,
-      isActionable: true, // Calendar tasks are typically actionable
+      status: getTaskStatus(calendarTask.status),
+      dueDate: dueDate,
+      eisenhowerQuadrant: getEisenhowerQuadrant(calendarTask.priority),
+      isActionable: true,
       creationDate: new Date(calendarTask.created),
     });
 
     return task;
-  }
-
-  /**
-   * Determine if an event is likely a task
-   *
-   * @param event - The event to analyze
-   * @returns Whether the event is likely a task
-   */
-  private isEventLikelyTask(event: CalendarEvent): boolean {
-    // This is a simplified heuristic - in a real app, we'd use more sophisticated logic
-    const taskKeywords = [
-      "todo",
-      "task",
-      "action item",
-      "deadline",
-      "submit",
-      "complete",
-      "finish",
-    ];
-
-    // Check summary and description for task keywords
-    const textToCheck =
-      `${event.summary} ${event.description || ""}`.toLowerCase();
-
-    return taskKeywords.some((keyword) => textToCheck.includes(keyword));
   }
 
   /**
@@ -323,11 +307,11 @@ export class GoogleCalendarLoader {
     );
 
     // Convert events to tasks
-    const eventTasks = events.map((event) => this.eventToTask(event));
+    const eventTasks = events.map((event) => this.convertEventToTask(event));
 
     // Convert calendar tasks to tasks
     const calendarTasksTasks = calendarTasks.map((calTask) =>
-      this.calendarTaskToTask(calTask),
+      this.convertCalendarTaskToTask(calTask),
     );
 
     // Combine all tasks

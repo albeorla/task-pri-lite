@@ -146,10 +146,10 @@ export class MeetingNoteInputItem extends TextInputItem {
   }
 
   /**
-   * Gets the potential nature of this item
-   * @returns A guess at the nature based on meeting notes content
+   * Get the potential nature of this meeting note
+   * @returns The potential nature of the input
    */
-  public getPotentialNature(): ItemNature {
+  public override getPotentialNature(): ItemNature {
     // Meeting notes could contain multiple types of items
     // For simplicity, we'll return UNCLEAR and let processors handle the details
     return ItemNature.UNCLEAR;

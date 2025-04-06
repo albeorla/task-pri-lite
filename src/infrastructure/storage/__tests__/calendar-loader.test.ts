@@ -3,7 +3,14 @@
  */
 
 import fs from "fs";
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  afterEach as _afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { GoogleCalendarLoader } from "../calendar-loader";
 import _path from "path";
 
@@ -83,14 +90,16 @@ describe("GoogleCalendarLoader", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Mock the readFile implementation for events
-    (fs.promises.readFile as jest.Mock).mockImplementation((path) => {
-      if (path.includes("events")) {
-        return Promise.resolve(JSON.stringify(mockEventsData));
-      } else if (path.includes("tasks")) {
-        return Promise.resolve(JSON.stringify(mockTasksData));
-      }
-      return Promise.reject(new Error("Unknown file"));
-    });
+    (fs.promises.readFile as jest.Mock).mockImplementation(
+      (filePath: string) => {
+        if (filePath.includes("events")) {
+          return Promise.resolve(JSON.stringify(mockEventsData));
+        } else if (filePath.includes("tasks")) {
+          return Promise.resolve(JSON.stringify(mockTasksData));
+        }
+        return Promise.reject(new Error("Unknown file"));
+      },
+    );
   });
 
   it("should create a GoogleCalendarLoader instance with the default file paths", () => {
@@ -158,7 +167,7 @@ describe("GoogleCalendarLoader", () => {
 
   it("should throw an error if file reading fails", async () => {
     (fs.promises.readFile as jest.Mock).mockRejectedValueOnce(
-      new Error("File read error"),
+      new Error("File read error") as any,
     );
     const loader = new GoogleCalendarLoader();
 
@@ -180,8 +189,10 @@ describe("GoogleCalendarLoader", () => {
 
     // Check that the first task is properly mapped
     const firstTask = result.tasks[0];
-    expect(firstTask.description).toBe("Test Event 1");
-    expect(firstTask.dueDate).toBeInstanceOf(Date);
+    if (firstTask) {
+      expect(firstTask.description).toBe("Test Event 1");
+      expect(firstTask.dueDate).toBeInstanceOf(Date);
+    }
   });
 
   it("should handle empty data", async () => {

@@ -110,22 +110,23 @@ export class FileStorageService implements TaskProjectStorageService {
       const rawData = await fs.promises.readFile(this.tasksFilePath, "utf8");
       const parsedData = JSON.parse(rawData) as any[];
 
-      // Temporarily return partially hydrated tasks
-      // (project links will be added later in loadAll)
-      return parsedData.map(
-        (data) =>
+      // Convert dates and create Task/Project objects
+      const tasks = parsedData.map(
+        (data: any) =>
           new Task({
             id: data.id,
             description: data.description,
             notes: data.notes,
             status: data.status,
             context: data.context,
-            dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+            dueDate: data.dueDate ? new Date(data.dueDate) : null,
             eisenhowerQuadrant: data.eisenhowerQuadrant,
             isActionable: data.isActionable,
             creationDate: new Date(data.creationDate),
           }),
       );
+
+      return tasks;
     } catch (error) {
       console.error("Error loading tasks:", error);
       return [];

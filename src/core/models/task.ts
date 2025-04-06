@@ -27,13 +27,13 @@ export interface TaskProps {
   id?: string;
   description: string;
   sourceId?: string;
-  dueDate?: Date;
+  dueDate?: Date | null;
   notes?: string;
   status?: TaskStatus;
-  project?: Project;
-  context?: string;
-  eisenhowerQuadrant?: EisenhowerQuadrant;
-  isActionable?: boolean;
+  project?: Project | null;
+  context?: string | null;
+  eisenhowerQuadrant?: EisenhowerQuadrant | null;
+  isActionable?: boolean | null;
   creationDate?: Date;
 }
 
@@ -106,7 +106,7 @@ export class Task {
       notes: json.notes,
       status: json.status as TaskStatus,
       context: json.context,
-      dueDate: json.dueDate ? new Date(json.dueDate) : undefined,
+      dueDate: json.dueDate ? new Date(json.dueDate) : null,
       eisenhowerQuadrant: json.eisenhowerQuadrant as EisenhowerQuadrant,
       isActionable: json.isActionable,
       creationDate: new Date(json.creationDate),

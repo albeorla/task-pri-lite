@@ -9,7 +9,7 @@ import { Task } from "./task";
 export interface ProjectProps {
   id?: string;
   name: string;
-  outcome?: string;
+  outcome?: string | null | undefined;
   status?: string;
   creationDate?: Date;
 }

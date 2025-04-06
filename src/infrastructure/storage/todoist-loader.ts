@@ -164,24 +164,26 @@ export class TodoistLoader {
 
     // First pass: Create all tasks
     for (const todoistTask of todoistTasks) {
+      let dueDate: Date | null = null;
+      if (todoistTask.due && todoistTask.due.date) {
+        dueDate = new Date(todoistTask.due.date);
+      }
+
       const task = new Task({
         id: todoistTask.id,
         description: todoistTask.content,
         notes: todoistTask.description || "",
         status: todoistTask.is_completed ? TaskStatus.DONE : TaskStatus.INBOX,
         context: "", // Todoist doesn't have direct context mapping
-        dueDate: todoistTask.due
-          ? new Date(todoistTask.due.datetime || todoistTask.due.date)
-          : undefined,
-        // Map Todoist priority (4=highest, 1=lowest) to Eisenhower quadrant
+        dueDate: dueDate,
         eisenhowerQuadrant:
           todoistTask.priority >= 3
-            ? EisenhowerQuadrant.DO
+            ? todoistTask.priority === 4
+              ? EisenhowerQuadrant.DO
+              : EisenhowerQuadrant.DECIDE
             : todoistTask.priority === 2
-              ? EisenhowerQuadrant.DECIDE
-              : todoistTask.priority === 1
-                ? EisenhowerQuadrant.DELEGATE
-                : EisenhowerQuadrant.DELETE,
+              ? EisenhowerQuadrant.DELEGATE
+              : EisenhowerQuadrant.DELETE,
         isActionable: true, // Assume all Todoist tasks are actionable
         creationDate: new Date(todoistTask.created_at),
       });
