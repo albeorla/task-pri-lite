@@ -102,7 +102,7 @@ export class TaskService {
     // Get next action for each project
     const nextActions: Task[] = [];
 
-    for (const [projectId, projectTasks] of projectMap.entries()) {
+    for (const [_projectId, projectTasks] of projectMap.entries()) {
       // Sort tasks by priority
       const sortedTasks = [...projectTasks].sort((a, b) => {
         // Sort by Eisenhower quadrant

@@ -228,7 +228,10 @@ export class TaskManager {
   /**
    * Deserialize data from storage
    */
-  static deserializeData(data: { tasks: any[]; projects: any[] }): TaskManager {
+  static deserializeData(_data: {
+    tasks: any[];
+    projects: any[];
+  }): TaskManager {
     // This needs a processor and prioritizer to be passed in
     throw new Error(
       "Not implemented - need processor and prioritizer instances",

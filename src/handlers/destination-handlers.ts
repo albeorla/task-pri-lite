@@ -108,10 +108,10 @@ Please add this task to Todoist manually.
 
   /**
    * Simulates user interaction for manual task entry
-   * @param formattedTask The formatted task
+   * @param _formattedTask The formatted task
    * @returns A promise that resolves when the simulation is complete
    */
-  private async simulateUserInteraction(formattedTask: string): Promise<void> {
+  private async simulateUserInteraction(_formattedTask: string): Promise<void> {
     // In a real implementation, this would show a UI for the user
     // For MVP, we'll just return a promise that resolves immediately
     return Promise.resolve();
@@ -224,11 +224,11 @@ Would you like to add this event to your calendar?
 
   /**
    * Simulates user confirmation for event creation
-   * @param formattedEvent The formatted event
+   * @param _formattedEvent The formatted event
    * @returns A promise that resolves to true if confirmed, false otherwise
    */
   private async simulateUserConfirmation(
-    formattedEvent: string,
+    _formattedEvent: string,
   ): Promise<boolean> {
     // In a real implementation, this would show a UI for the user to confirm
     // For MVP, we'll just return a promise that resolves to true
@@ -344,11 +344,11 @@ Please save this reference information to your Markdown notes.
 
   /**
    * Simulates user interaction for manual reference saving
-   * @param formattedReference The formatted reference
+   * @param _formattedReference The formatted reference
    * @returns A promise that resolves when the simulation is complete
    */
   private async simulateUserInteraction(
-    formattedReference: string,
+    _formattedReference: string,
   ): Promise<void> {
     // In a real implementation, this would show a UI for the user
     // For MVP, we'll just return a promise that resolves immediately
@@ -415,11 +415,11 @@ This item couldn't be automatically classified. Please review it manually.
 
   /**
    * Simulates user interaction for manual review
-   * @param formattedNotification The formatted notification
+   * @param _formattedNotification The formatted notification
    * @returns A promise that resolves when the simulation is complete
    */
   private async simulateUserInteraction(
-    formattedNotification: string,
+    _formattedNotification: string,
   ): Promise<void> {
     // In a real implementation, this would show a UI for the user
     // For MVP, we'll just return a promise that resolves immediately

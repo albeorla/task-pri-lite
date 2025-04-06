@@ -143,9 +143,9 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
       // "due by January 15, 2023"
       /due\s+by\s+(\w+\s+\d{1,2},?\s+\d{4})/i,
       // "due on 15/01/2023"
-      /due\s+on\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i,
+      new RegExp("due\\s+on\\s+(\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2,4})", "i"),
       // "deadline: 2023-01-15"
-      /deadline:?\s+(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/i,
+      new RegExp("deadline:?\\s+(\\d{4}[/\\-.]\\d{1,2}[/\\-.]\\d{1,2})", "i"),
       // "by tomorrow"
       /by\s+(tomorrow)/i,
       // "by next week"
@@ -382,7 +382,10 @@ export class EventDetectionProcessor extends BaseInputProcessor {
       // "meeting on January 15, 2023 at 2:30 PM"
       /(?:meeting|event|call)\s+on\s+(\w+\s+\d{1,2},?\s+\d{4})\s+at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
       // "scheduled for 15/01/2023 at 14:30"
-      /scheduled\s+for\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
+      new RegExp(
+        "scheduled\\s+for\\s+(\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2,4})\\s+at\\s+(\\d{1,2}:\\d{2}\\s*(?:am|pm)?)",
+        "i",
+      ),
       // "starts at 2:30 PM on Friday"
       /starts\s+at\s+(\d{1,2}:\d{2}\s*(?:am|pm)?)\s+on\s+(\w+)/i,
       // "tomorrow at 2:30 PM"
@@ -706,8 +709,8 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
    * @returns The extracted URLs
    */
   private extractUrls(text: string): string[] {
-    // Simple URL regex
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    // Simple URL regex using string literals to avoid escape issues
+    const urlRegex = new RegExp("(https?://[^\\s]+)", "g");
 
     // Find all matches
     const matches = text.match(urlRegex);
@@ -801,10 +804,10 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
 export class DefaultProcessor extends BaseInputProcessor {
   /**
    * Determines if this processor can process the given input
-   * @param input The input item to check
+   * @param _input The input item to check
    * @returns Always returns true (fallback processor)
    */
-  public canProcess(input: IInputItem): boolean {
+  public canProcess(_input: IInputItem): boolean {
     // This is the fallback processor, so it can process any input
     return true;
   }

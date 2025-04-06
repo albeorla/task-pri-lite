@@ -130,8 +130,21 @@ describe("Orchestration Services Implementation", () => {
       expect(result.suggestedDestination).toBe(DestinationType.REVIEW_LATER);
     });
 
-    test.skip("should throw error when no processor can handle input", () => {
-      // Skip this test to avoid the require call
+    test("should throw error when no processor can handle input", () => {
+      // Create a mock processor that cannot handle any input
+      const mockProcessor: IInputProcessor = {
+        canProcess: jest.fn().mockReturnValue(false),
+        process: jest.fn(),
+      };
+      const inputItem = new MockInputItem();
+
+      // Replace all processors with just our mock
+      (inputService as any).processors = [mockProcessor];
+
+      // Expect the function to throw when called
+      expect(() => {
+        inputService.processInput(inputItem);
+      }).toThrow("No processor found that can handle the input");
     });
 
     test("should allow adding custom processors", () => {

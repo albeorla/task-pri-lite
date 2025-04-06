@@ -5,7 +5,7 @@
  */
 
 import { ChatOpenAI } from "@langchain/openai";
-import { LLMChain } from "@langchain/core/chains";
+import { LLMChain } from "langchain/chains";
 import { llmConfig } from "../../config/llm-config";
 import {
   clarifyPromptTemplate,

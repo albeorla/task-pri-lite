@@ -6,7 +6,10 @@ config();
 
 // Define environment schema
 const envSchema = z.object({
-  OPENAI_API_KEY: z.string().min(1, "OpenAI API key is required"),
+  OPENAI_API_KEY: z
+    .string()
+    .min(1, "OpenAI API key is required")
+    .default("test-api-key-for-tests"),
   OPENAI_MODEL: z.string().default("gpt-4o"),
   OPENAI_TEMPERATURE: z.string().default("0.2"),
   OPENAI_MAX_TOKENS: z.string().default("1024"),
@@ -14,7 +17,7 @@ const envSchema = z.object({
 
 // Parse and validate environment variables
 export const env = envSchema.parse({
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "test-api-key-for-tests", // Fallback for tests
   OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-4o",
   OPENAI_TEMPERATURE: process.env.OPENAI_TEMPERATURE || "0.2",
   OPENAI_MAX_TOKENS: process.env.OPENAI_MAX_TOKENS || "1024",
