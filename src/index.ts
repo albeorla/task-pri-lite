@@ -360,26 +360,6 @@ function _runAllExamples(): void {
 
   _processManualTask();
   _processTextInput();
-  _processTodoistExport();
-  _generateTimeBasedView();
-}
-
-function _processManualTask(): void {
-  // ... existing function code ...
-}
-
-function _processTextInput(): void {
-  // ... existing function code ...
-}
-
-function _processTodoistExport(): void {
-  // ... existing function code ...
-}
-
-function _generateTimeBasedView(): void {
-  // ... existing function code ...
-}
-
-function _runExample(_exampleName: string, _exampleFn: () => void): void {
-  // ... existing function code ...
+  _processTodoistExport("./output/example-todoist-export.json");
+  _generateTimeBasedView("today");
 }

@@ -1,3 +1,10 @@
+/**
+ * Tests for Orchestration Services
+ *
+ * This file contains tests for the orchestration services that are responsible
+ * for processing inputs and directing outputs.
+ */
+
 import {
   InputProcessingService,
   OutputHandlingService,
@@ -9,34 +16,81 @@ import {
   IProcessedItem,
   IInputProcessor,
   IDestinationHandler,
-} from "../../core/interfaces";
-import {
   InputSource,
   ItemNature,
   DestinationType,
-} from "../../core/types/enums";
+} from "../../core/interfaces";
 
-// Create a mock implementation of IInputItem for testing
+// Mock input processor
+class MockInputProcessor implements IInputProcessor {
+  canProcessResult: boolean;
+  processItem: IProcessedItem;
+
+  constructor(canProcessResult: boolean, processItem: IProcessedItem) {
+    this.canProcessResult = canProcessResult;
+    this.processItem = processItem;
+  }
+
+  canProcess(_item: IInputItem): boolean {
+    return this.canProcessResult;
+  }
+
+  process(_item: IInputItem): IProcessedItem {
+    return this.processItem;
+  }
+}
+
+// Mock destination handler
+class MockDestinationHandler implements IDestinationHandler {
+  canHandleResult: boolean;
+  handleCalled: boolean = false;
+
+  constructor(canHandleResult: boolean) {
+    this.canHandleResult = canHandleResult;
+  }
+
+  canHandle(_item: IProcessedItem): boolean {
+    return this.canHandleResult;
+  }
+
+  async handle(_item: IProcessedItem): Promise<void> {
+    this.handleCalled = true;
+    return Promise.resolve();
+  }
+}
+
+// Mock input item
 class MockInputItem implements IInputItem {
   source: InputSource;
   rawContent: any;
-  timestamp: Date;
+  timestamp: Date = new Date();
 
-  constructor(
-    source: InputSource,
-    rawContent: any,
-    timestamp: Date = new Date(),
-  ) {
+  constructor(source: InputSource, content: any) {
     this.source = source;
-    this.rawContent = rawContent;
-    this.timestamp = timestamp;
+    this.rawContent = content;
   }
 
-  // Implementation of the required method
   getPotentialNature(): ItemNature {
-    return ItemNature.UNCLEAR;
+    return ItemNature.ACTIONABLE_TASK;
   }
 }
+
+// Create mock items for testing
+const mockInputItem = new MockInputItem(
+  InputSource.MANUAL_ENTRY,
+  "Test content",
+);
+
+// Mock processed item
+const mockProcessedItem: IProcessedItem = {
+  originalInput: mockInputItem,
+  determinedNature: ItemNature.ACTIONABLE_TASK,
+  suggestedDestination: DestinationType.TODOIST,
+  extractedData: {
+    title: "Test Task",
+    description: "This is a test task",
+  },
+};
 
 describe("Orchestration Services", () => {
   // Mock console methods to prevent test output noise
@@ -56,23 +110,6 @@ describe("Orchestration Services", () => {
   describe("InputProcessingService", () => {
     let inputService: InputProcessingService;
 
-    // Mock processor that always returns true for canProcess
-    const mockProcessor: IInputProcessor = {
-      canProcess: jest.fn().mockReturnValue(true),
-      process: jest.fn().mockImplementation((item) => ({
-        originalInput: item,
-        determinedNature: ItemNature.ACTIONABLE_TASK,
-        suggestedDestination: DestinationType.TODOIST,
-        extractedData: {},
-      })),
-    };
-
-    // Mock processor that always returns false for canProcess
-    const mockNonMatchingProcessor: IInputProcessor = {
-      canProcess: jest.fn().mockReturnValue(false),
-      process: jest.fn(),
-    };
-
     beforeEach(() => {
       // Create a new service instance
       inputService = new InputProcessingService();
@@ -83,38 +120,47 @@ describe("Orchestration Services", () => {
       jest.clearAllMocks();
     });
 
-    test("should use first processor that can handle the input", () => {
-      // Setup
-      const mockInput = new MockInputItem(InputSource.EMAIL, {
-        text: "Test content",
+    test("should add processor correctly", () => {
+      // Arrange
+      const processor = new MockInputProcessor(true, mockProcessedItem);
+
+      // Act
+      inputService.addProcessor(processor);
+
+      // Assert - indirectly testing by calling processInput
+      const result = inputService.processInput(mockInputItem);
+      expect(result).toBe(mockProcessedItem);
+    });
+
+    test("should process input with first compatible processor", () => {
+      // Arrange
+      const processor1 = new MockInputProcessor(false, mockProcessedItem);
+      const processor2 = new MockInputProcessor(true, mockProcessedItem);
+      const processor3 = new MockInputProcessor(true, {
+        ...mockProcessedItem,
+        determinedNature: ItemNature.REFERENCE_INFO,
       });
 
-      inputService.addProcessor(mockNonMatchingProcessor);
-      inputService.addProcessor(mockProcessor);
+      inputService.addProcessor(processor1);
+      inputService.addProcessor(processor2);
+      inputService.addProcessor(processor3);
 
-      // Execute
-      const result = inputService.processInput(mockInput);
+      // Act
+      const result = inputService.processInput(mockInputItem);
 
-      // Verify
-      expect(mockNonMatchingProcessor.canProcess).toHaveBeenCalledWith(
-        mockInput,
-      );
-      expect(mockProcessor.canProcess).toHaveBeenCalledWith(mockInput);
-      expect(mockNonMatchingProcessor.process).not.toHaveBeenCalled();
-      expect(mockProcessor.process).toHaveBeenCalledWith(mockInput);
+      // Assert
+      expect(result).toBe(mockProcessedItem);
       expect(result.determinedNature).toBe(ItemNature.ACTIONABLE_TASK);
     });
 
     test("should throw error when no processor can handle input", () => {
-      // Setup
-      const mockInput = new MockInputItem(InputSource.EMAIL, {
-        text: "Test content",
-      });
+      // Arrange
+      const processor = new MockInputProcessor(false, mockProcessedItem);
 
-      inputService.addProcessor(mockNonMatchingProcessor);
+      inputService.addProcessor(processor);
 
-      // Execute & Verify
-      expect(() => inputService.processInput(mockInput)).toThrow(
+      // Act & Assert
+      expect(() => inputService.processInput(mockInputItem)).toThrow(
         "No processor found that can handle the input",
       );
     });
@@ -122,18 +168,6 @@ describe("Orchestration Services", () => {
 
   describe("OutputHandlingService", () => {
     let outputService: OutputHandlingService;
-
-    // Mock handler that always returns true for canHandle
-    const mockHandler: IDestinationHandler = {
-      canHandle: jest.fn().mockReturnValue(true),
-      handle: jest.fn().mockResolvedValue(undefined),
-    };
-
-    // Mock handler that always returns false for canHandle
-    const mockNonMatchingHandler: IDestinationHandler = {
-      canHandle: jest.fn().mockReturnValue(false),
-      handle: jest.fn(),
-    };
 
     beforeEach(() => {
       // Create a new service instance
@@ -145,50 +179,44 @@ describe("Orchestration Services", () => {
       jest.clearAllMocks();
     });
 
-    test("should use first handler that can handle the output", async () => {
-      // Setup
-      const mockInputItem = new MockInputItem(InputSource.EMAIL, {
-        text: "Test content",
-      });
+    test("should add handler correctly", async () => {
+      // Arrange
+      const handler = new MockDestinationHandler(true);
 
-      const mockProcessedItem: IProcessedItem = {
-        originalInput: mockInputItem,
-        determinedNature: ItemNature.ACTIONABLE_TASK,
-        suggestedDestination: DestinationType.TODOIST,
-        extractedData: {},
-      };
-
-      outputService.addHandler(mockNonMatchingHandler);
-      outputService.addHandler(mockHandler);
-
-      // Execute
+      // Act
+      outputService.addHandler(handler);
       await outputService.handleOutput(mockProcessedItem);
 
-      // Verify
-      expect(mockNonMatchingHandler.canHandle).toHaveBeenCalledWith(
-        mockProcessedItem,
-      );
-      expect(mockHandler.canHandle).toHaveBeenCalledWith(mockProcessedItem);
-      expect(mockNonMatchingHandler.handle).not.toHaveBeenCalled();
-      expect(mockHandler.handle).toHaveBeenCalledWith(mockProcessedItem);
+      // Assert
+      expect(handler.handleCalled).toBe(true);
+    });
+
+    test("should handle output with first compatible handler", async () => {
+      // Arrange
+      const handler1 = new MockDestinationHandler(false);
+      const handler2 = new MockDestinationHandler(true);
+      const handler3 = new MockDestinationHandler(true);
+
+      outputService.addHandler(handler1);
+      outputService.addHandler(handler2);
+      outputService.addHandler(handler3);
+
+      // Act
+      await outputService.handleOutput(mockProcessedItem);
+
+      // Assert
+      expect(handler1.handleCalled).toBe(false);
+      expect(handler2.handleCalled).toBe(true);
+      expect(handler3.handleCalled).toBe(false);
     });
 
     test("should throw error when no handler can handle output", async () => {
-      // Setup
-      const mockInputItem = new MockInputItem(InputSource.EMAIL, {
-        text: "Test content",
-      });
+      // Arrange
+      const handler = new MockDestinationHandler(false);
 
-      const mockProcessedItem: IProcessedItem = {
-        originalInput: mockInputItem,
-        determinedNature: ItemNature.ACTIONABLE_TASK,
-        suggestedDestination: DestinationType.TODOIST,
-        extractedData: {},
-      };
+      outputService.addHandler(handler);
 
-      outputService.addHandler(mockNonMatchingHandler);
-
-      // Execute & Verify
+      // Act & Assert
       await expect(
         outputService.handleOutput(mockProcessedItem),
       ).rejects.toThrow("No handler found that can handle the processed item");
