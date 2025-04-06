@@ -7,6 +7,7 @@
 import { IProcessedItem } from "../core/interfaces";
 import fs from "fs";
 import path from "path";
+import { v4 as _uuidv4 } from "uuid";
 
 /**
  * Interface for TaskItem with essential properties
@@ -57,7 +58,7 @@ class TaskStore {
    */
   public addFromProcessedItem(processedItem: IProcessedItem): TaskItem {
     // Extract data and create a TaskItem
-    const { originalInput, extractedData } = processedItem;
+    const { extractedData } = processedItem;
 
     // Generate a unique ID
     const id = `task_${Date.now()}_${Math.floor(Math.random() * 1000)}`;

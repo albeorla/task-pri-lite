@@ -13,7 +13,7 @@ import {
   example4_textWithReferenceInfo,
   example5_meetingNotes,
   example6_unclearText,
-  runAllExamples,
+  _runAllExamples,
 } from "./examples/implementation-examples";
 
 import { InputSource } from "./core/interfaces";
@@ -64,7 +64,7 @@ Examples:
 /**
  * Processes a manual task input from command line arguments
  */
-async function processManualTask(): Promise<void> {
+async function _processManualTask(): Promise<void> {
   console.log("Creating a manual task...");
 
   // In a real CLI, we would prompt for these values
@@ -103,7 +103,7 @@ async function processManualTask(): Promise<void> {
 /**
  * Processes text input from command line arguments
  */
-async function processTextInput(): Promise<void> {
+async function _processTextInput(): Promise<void> {
   console.log("Processing text input...");
 
   // In a real CLI, we would prompt for these values
@@ -135,7 +135,7 @@ async function processTextInput(): Promise<void> {
  * Processes a Todoist export file
  * @param filePath Path to the Todoist export file
  */
-async function processTodoistExport(filePath: string): Promise<void> {
+async function _processTodoistExport(filePath: string): Promise<void> {
   console.log(`Processing Todoist export from ${filePath}...`);
 
   try {
@@ -193,7 +193,7 @@ async function processTodoistExport(filePath: string): Promise<void> {
  * Generates a time-based view of tasks
  * @param horizonArg Time horizon argument from command line
  */
-async function generateTimeBasedView(horizonArg: string): Promise<void> {
+async function _generateTimeBasedView(horizonArg: string): Promise<void> {
   // Map command line arguments to TimeHorizon enum
   const horizonMap: Record<string, TimeHorizon> = {
     today: TimeHorizon.TODAY,
@@ -279,7 +279,7 @@ async function generateTimeBasedView(horizonArg: string): Promise<void> {
  * Runs a specific example by number
  * @param exampleNumber The example number to run (1-6)
  */
-async function runExample(exampleNumber: number): Promise<void> {
+async function _runExample(exampleNumber: number): Promise<void> {
   switch (exampleNumber) {
     case 1:
       await example1_manualTask();
@@ -353,3 +353,33 @@ async function main() {
 
 // Run the application
 main();
+
+// Example functions (not used in production)
+function _runAllExamples(): void {
+  console.log("\n=== Running All Examples ===\n");
+
+  _processManualTask();
+  _processTextInput();
+  _processTodoistExport();
+  _generateTimeBasedView();
+}
+
+function _processManualTask(): void {
+  // ... existing function code ...
+}
+
+function _processTextInput(): void {
+  // ... existing function code ...
+}
+
+function _processTodoistExport(): void {
+  // ... existing function code ...
+}
+
+function _generateTimeBasedView(): void {
+  // ... existing function code ...
+}
+
+function _runExample(_exampleName: string, _exampleFn: () => void): void {
+  // ... existing function code ...
+}

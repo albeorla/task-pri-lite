@@ -11,16 +11,13 @@ import {
 } from "../orchestration-services-impl";
 
 import { TaskDetectionProcessor } from "../../processors/core-processors";
-import {
-  TextInputItem,
-  ManualTaskInputItem,
-} from "../../inputs/basic-input-items";
-import { InputSource } from "../../core/types/enums";
+import { TextInputItem } from "../../inputs/basic-input-items";
 import { Task, TaskStatus, EisenhowerQuadrant } from "../../core/models/task";
 import { Project } from "../../core/models/project";
 import { TaskManager } from "../../application/managers/task-manager";
 import { GTDClarificationProcessor } from "../../application/processors/gtd-processor";
 import { EisenhowerPrioritizer } from "../../application/processors/eisenhower-prioritizer";
+import { ItemNature, DestinationType } from "../../core/types/enums";
 
 describe("Integration Tests", () => {
   // Mock console methods to prevent test output noise
@@ -80,8 +77,45 @@ describe("Integration Tests", () => {
       // The due date should be set to next week
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
+
+      // First ensure due date exists before testing it
+      expect(processedItem.extractedData.dueDate).toBeDefined();
+
+      // Now that we know it exists, we can safely test its value
+      const dueDate = new Date(processedItem.extractedData.dueDate as Date);
+      // Just compare the date part (ignore time differences)
+      expect(dueDate.toDateString()).toBe(nextWeek.toDateString());
+    });
+
+    test("should extract task details from text content", () => {
+      // Create the processors
+      const taskProcessor = new TaskDetectionProcessor();
+
+      // Create a text input
+      const textInput = new TextInputItem(
+        "Complete project report by next week\nThis is a high priority task.",
+      );
+
+      // Process the input
+      const processedItem = taskProcessor.process(textInput);
+
+      // Verify extracted data
+      expect(processedItem.determinedNature).toBe(ItemNature.ACTIONABLE_TASK);
+      expect(processedItem.suggestedDestination).toBe(DestinationType.TODOIST);
+      expect(processedItem.extractedData.title).toBe(
+        "Complete project report by next week",
+      );
+      expect(processedItem.extractedData.description).toContain(
+        "high priority task",
+      );
+
+      // Verify due date is set to next week
+      expect(processedItem.extractedData.dueDate).toBeDefined();
       if (processedItem.extractedData.dueDate) {
         const dueDate = new Date(processedItem.extractedData.dueDate);
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+
         // Just compare the date part (ignore time differences)
         expect(dueDate.toDateString()).toBe(nextWeek.toDateString());
       }
@@ -249,7 +283,7 @@ describe("Integration Tests", () => {
       // Mock the processor and prioritizer
       jest
         .spyOn(gtdProcessor, "process")
-        .mockImplementation((task, projectsMap) => {
+        .mockImplementation((task, _projectsMap) => {
           task.status = TaskStatus.NEXT_ACTION;
           task.isActionable = true;
           return Promise.resolve();

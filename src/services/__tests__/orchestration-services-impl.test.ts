@@ -14,8 +14,6 @@ import {
   ItemNature,
   DestinationType,
 } from "../../core/types/enums";
-import { DefaultProcessor } from "../../processors/core-processors";
-import { ReviewLaterHandler } from "../../handlers/destination-handlers";
 
 // Mock implementation of input processors
 jest.mock("../../processors/core-processors", () => ({

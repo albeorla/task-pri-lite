@@ -1,10 +1,11 @@
 /**
- * Unit tests for GoogleCalendarLoader
+ * Tests for GoogleCalendarLoader
  */
 
+import fs from "fs";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { GoogleCalendarLoader } from "../calendar-loader";
-import * as fs from "fs";
-import * as path from "path";
+import _path from "path";
 
 // Mock fs and validator modules
 jest.mock("fs", () => ({

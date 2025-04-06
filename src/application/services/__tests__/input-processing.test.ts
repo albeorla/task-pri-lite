@@ -1,9 +1,5 @@
 import { InputProcessingService } from "../input-processing";
-import {
-  IInputItem,
-  IInputProcessor,
-  IProcessedItem,
-} from "../../../core/interfaces";
+import { IInputItem, IInputProcessor } from "../../../core/interfaces";
 import {
   InputSource,
   ItemNature,

@@ -1,11 +1,12 @@
 import {
   StorageFactory,
   StorageType,
-  StorageFactoryOptions,
+  StorageOptions,
 } from "../storage-factory";
 import { FileStorageService } from "../../storage/file-storage";
 import { ExternalDataSourceService } from "../../storage/external-data-source";
-import { IStorageService } from "../../../core/interfaces/storage";
+import { MockStorageService } from "../../storage/mock-storage";
+import { _IStorageService } from "../../../core/interfaces/storage";
 
 jest.mock("../../storage/file-storage");
 jest.mock("../../storage/external-data-source");

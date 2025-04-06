@@ -117,15 +117,21 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split("\n")[0].trim();
-    if (firstLine && firstLine.length <= 100) {
-      return firstLine;
+    const lines = text.split("\n");
+    if (lines.length > 0) {
+      const firstLine = lines[0].trim();
+      if (firstLine && firstLine.length <= 100) {
+        return firstLine;
+      }
     }
 
     // If first line is too long, try to get the first sentence
-    const firstSentence = text.split(/[.!?]/)[0].trim();
-    if (firstSentence && firstSentence.length <= 100) {
-      return firstSentence;
+    const sentences = text.split(/[.!?]/);
+    if (sentences.length > 0) {
+      const firstSentence = sentences[0].trim();
+      if (firstSentence && firstSentence.length <= 100) {
+        return firstSentence;
+      }
     }
 
     // If all else fails, truncate the text
@@ -195,7 +201,7 @@ export class TaskDetectionProcessor extends BaseInputProcessor {
 
           // For explicit dates, parse them
           return new Date(match[1]);
-        } catch (e) {
+        } catch (_e) {
           // If date parsing fails, continue to the next pattern
           continue;
         }
@@ -332,6 +338,27 @@ export class EventDetectionProcessor extends BaseInputProcessor {
           },
         );
       }
+      
+      // Check if the text contains event-related keywords even if no date was detected
+      if (this.containsEventKeywords(text)) {
+        const defaultStartDateTime = new Date(); // Default to today if no date found
+        const defaultEndDateTime = new Date(defaultStartDateTime);
+        defaultEndDateTime.setHours(defaultEndDateTime.getHours() + 1); // Default to 1 hour later
+        
+        return new BaseProcessedItem(
+          input,
+          ItemNature.POTENTIAL_EVENT,
+          DestinationType.CALENDAR,
+          {
+            title,
+            description,
+            startDateTime: defaultStartDateTime,
+            endDateTime: defaultEndDateTime,
+            location,
+            attendees,
+          },
+        );
+      }
     }
 
     // If we couldn't extract event information or it's not a TextInputItem,
@@ -350,21 +377,48 @@ export class EventDetectionProcessor extends BaseInputProcessor {
   }
 
   /**
+   * Check if the text contains event-related keywords
+   * @param text The text to check
+   * @returns Whether the text contains event-related keywords
+   */
+  private containsEventKeywords(text: string): boolean {
+    const eventKeywords = [
+      "meeting",
+      "call",
+      "appointment",
+      "event",
+      "conference",
+      "webinar",
+      "workshop",
+      "session",
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return eventKeywords.some(keyword => lowerText.includes(keyword));
+  }
+
+  /**
    * Extracts the title from text content
    * @param text The text to extract from
    * @returns The extracted title
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split("\n")[0].trim();
-    if (firstLine && firstLine.length <= 100) {
-      return firstLine;
+    const lines = text.split("\n");
+    if (lines.length > 0) {
+      const firstLine = lines[0].trim();
+      if (firstLine && firstLine.length <= 100) {
+        return firstLine;
+      }
     }
 
     // If first line is too long, try to get the first sentence
-    const firstSentence = text.split(/[.!?]/)[0].trim();
-    if (firstSentence && firstSentence.length <= 100) {
-      return firstSentence;
+    const sentences = text.split(/[.!?]/);
+    if (sentences.length > 0) {
+      const firstSentence = sentences[0].trim();
+      if (firstSentence && firstSentence.length <= 100) {
+        return firstSentence;
+      }
     }
 
     // If all else fails, truncate the text
@@ -410,19 +464,11 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             // Try to parse the time
             const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
-              let hours = parseInt(timeParts[1]);
-              const minutes = parseInt(timeParts[2]);
-              const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
-
-              // Adjust hours for AM/PM
-              if (ampm === "pm" && hours < 12) {
-                hours += 12;
-              } else if (ampm === "am" && hours === 12) {
-                hours = 0;
+              const { hours, minutes, ampm } = this.parseTimeParts(timeParts);
+              if (hours !== null && minutes !== null && ampm !== null) {
+                date.setHours(hours, minutes, 0, 0);
+                return date;
               }
-
-              date.setHours(hours, minutes, 0, 0);
-              return date;
             }
           } else if (match[1] && match[1].toLowerCase() === "tomorrow") {
             // "tomorrow" pattern
@@ -436,22 +482,14 @@ export class EventDetectionProcessor extends BaseInputProcessor {
             // Try to parse the time
             const timeParts = match[1].match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
             if (timeParts) {
-              let hours = parseInt(timeParts[1]);
-              const minutes = parseInt(timeParts[2]);
-              const ampm = timeParts[3] ? timeParts[3].toLowerCase() : null;
-
-              // Adjust hours for AM/PM
-              if (ampm === "pm" && hours < 12) {
-                hours += 12;
-              } else if (ampm === "am" && hours === 12) {
-                hours = 0;
+              const { hours, minutes, ampm } = this.parseTimeParts(timeParts);
+              if (hours !== null && minutes !== null && ampm !== null) {
+                today.setHours(hours, minutes, 0, 0);
+                return today;
               }
-
-              today.setHours(hours, minutes, 0, 0);
-              return today;
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // If date/time parsing fails, continue to the next pattern
           continue;
         }
@@ -459,6 +497,32 @@ export class EventDetectionProcessor extends BaseInputProcessor {
     }
 
     return null;
+  }
+
+  /**
+   * Fix for the parsing time parts with proper null checks
+   */
+  private parseTimeParts(timeParts: RegExpMatchArray | null): { hours: number, minutes: number, ampm: string | null } | null {
+    if (!timeParts || timeParts.length < 3) {
+      return null;
+    }
+    
+    // Safely get values with nullish coalescing defaults
+    const hourStr = timeParts[1] || '0';
+    const minuteStr = timeParts[2] || '0';
+    const ampm = timeParts[3]?.toLowerCase() || null;
+    
+    let hours = parseInt(hourStr, 10);
+    const minutes = parseInt(minuteStr, 10);
+    
+    // Adjust hours for AM/PM
+    if (ampm === "pm" && hours < 12) {
+      hours += 12;
+    } else if (ampm === "am" && hours === 12) {
+      hours = 0;
+    }
+    
+    return { hours, minutes, ampm };
   }
 
   /**
@@ -515,7 +579,7 @@ export class EventDetectionProcessor extends BaseInputProcessor {
 
             return endDateTime;
           }
-        } catch (e) {
+        } catch (_e) {
           // If time parsing fails, continue to the next pattern
           continue;
         }
@@ -688,15 +752,21 @@ export class ReferenceInfoProcessor extends BaseInputProcessor {
    */
   private extractTitle(text: string): string {
     // Try to get the first line
-    const firstLine = text.split("\n")[0].trim();
-    if (firstLine && firstLine.length <= 100) {
-      return firstLine;
+    const lines = text.split("\n");
+    if (lines.length > 0) {
+      const firstLine = lines[0].trim();
+      if (firstLine && firstLine.length <= 100) {
+        return firstLine;
+      }
     }
 
     // If first line is too long, try to get the first sentence
-    const firstSentence = text.split(/[.!?]/)[0].trim();
-    if (firstSentence && firstSentence.length <= 100) {
-      return firstSentence;
+    const sentences = text.split(/[.!?]/);
+    if (sentences.length > 0) {
+      const firstSentence = sentences[0].trim();
+      if (firstSentence && firstSentence.length <= 100) {
+        return firstSentence;
+      }
     }
 
     // If all else fails, truncate the text

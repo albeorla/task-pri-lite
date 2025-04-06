@@ -104,8 +104,11 @@ interface CalendarTask {
   priority?: number;
 }
 
-interface CalendarEventsData {
-  [calendarName: string]: CalendarEvent[];
+/**
+ * Interface for calendar event data
+ */
+interface _CalendarEventsData {
+  events: CalendarEvent[];
 }
 
 /**

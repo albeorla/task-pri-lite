@@ -251,12 +251,8 @@ describe("CalendarHandler", () => {
         expect(console.log).toHaveBeenCalled();
         const logOutput = (console.log as jest.Mock).mock.calls[0][0];
 
-        if (expected === "Not specified") {
-          expect(logOutput).toContain(expected);
-        } else {
-          // For Date objects, just verify it contains a date string (ignore exact format)
-          expect(logOutput).toContain(expected);
-        }
+        // Always verify that the output contains the expected value
+        expect(logOutput).toContain(expected);
       }
     });
   });

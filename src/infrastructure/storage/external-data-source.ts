@@ -91,7 +91,7 @@ export class ExternalDataSourceService implements IStorageService {
   /**
    * Save data to storage (not implemented for read-only external sources)
    */
-  async save<T>(key: string, data: T): Promise<void> {
+  async save<T>(_key: string, _data: T): Promise<void> {
     console.warn(
       "ExternalDataSourceService is read-only, save operation not implemented",
     );
@@ -115,7 +115,7 @@ export class ExternalDataSourceService implements IStorageService {
   /**
    * Delete data from storage (not implemented for read-only external sources)
    */
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     console.warn(
       "ExternalDataSourceService is read-only, delete operation not implemented",
     );
