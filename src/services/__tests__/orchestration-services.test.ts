@@ -74,7 +74,12 @@ describe("Orchestration Services", () => {
     };
 
     beforeEach(() => {
+      // Create a new service instance
       inputService = new InputProcessingService();
+
+      // Clear default processors by resetting the processors array
+      (inputService as any).processors = [];
+
       jest.clearAllMocks();
     });
 
@@ -131,7 +136,12 @@ describe("Orchestration Services", () => {
     };
 
     beforeEach(() => {
+      // Create a new service instance
       outputService = new OutputHandlingService();
+
+      // Clear default handlers by resetting the handlers array
+      (outputService as any).handlers = [];
+
       jest.clearAllMocks();
     });
 

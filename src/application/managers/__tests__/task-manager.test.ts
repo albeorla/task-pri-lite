@@ -87,6 +87,109 @@ describe("TaskManager", () => {
       );
       expect(mockPrioritizer.prioritize).toHaveBeenCalledWith(nextActionTask);
     });
+
+    test("should skip processing for non-inbox tasks", async () => {
+      // Setup
+      const waitingTask = new Task({
+        id: "task1",
+        description: "Waiting task",
+        status: TaskStatus.WAITING_FOR,
+      });
+      const nextActionTask = new Task({
+        id: "task2",
+        description: "Next action task",
+        status: TaskStatus.NEXT_ACTION,
+      });
+
+      taskManager.loadTasks([waitingTask, nextActionTask]);
+
+      // Execute
+      await taskManager.runWorkflow();
+
+      // Verify - neither task should be processed as they're not in INBOX
+      expect(mockProcessor.process).not.toHaveBeenCalled();
+
+      // But both should be prioritized if they're not REFERENCE, SOMEDAY_MAYBE, or DONE
+      expect(mockPrioritizer.prioritize).toHaveBeenCalledWith(waitingTask);
+      expect(mockPrioritizer.prioritize).toHaveBeenCalledWith(nextActionTask);
+    });
+
+    test("should handle processor errors gracefully", async () => {
+      // Setup
+      const inboxTask = new Task({
+        id: "task1",
+        description: "Problem task",
+        status: TaskStatus.INBOX,
+      });
+
+      mockProcessor.process.mockRejectedValueOnce(
+        new Error("Processing error"),
+      );
+      taskManager.loadTasks([inboxTask]);
+
+      // Execute - should not throw
+      await expect(taskManager.runWorkflow()).resolves.not.toThrow();
+
+      // Verify processing was attempted but failed
+      expect(mockProcessor.process).toHaveBeenCalledWith(
+        inboxTask,
+        expect.any(Map),
+      );
+    });
+
+    test("should handle prioritizer errors gracefully", async () => {
+      // Setup
+      const actionableTask = new Task({
+        id: "task1",
+        description: "Actionable task",
+        status: TaskStatus.NEXT_ACTION,
+      });
+
+      mockPrioritizer.prioritize.mockRejectedValueOnce(
+        new Error("Prioritization error"),
+      );
+      taskManager.loadTasks([actionableTask]);
+
+      // Execute - should not throw
+      await expect(taskManager.runWorkflow()).resolves.not.toThrow();
+
+      // Verify prioritization was attempted but failed
+      expect(mockPrioritizer.prioritize).toHaveBeenCalledWith(actionableTask);
+    });
+
+    test("should update projects map during workflow", async () => {
+      // Setup
+      const inboxTask = new Task({
+        id: "task1",
+        description: "Project-related task",
+        status: TaskStatus.INBOX,
+      });
+
+      const project = new Project({ id: "project1", name: "New Project" });
+
+      // Mock the processor to add a project to the task during processing
+      mockProcessor.process.mockImplementationOnce((task, projectsMap) => {
+        task.project = project;
+        projectsMap.set(project.id, project);
+        project.addTask(task);
+        task.status = TaskStatus.PROJECT_TASK;
+        return Promise.resolve();
+      });
+
+      taskManager.loadTasks([inboxTask]);
+
+      // Execute
+      await taskManager.runWorkflow();
+
+      // Verify that task was updated and project was created
+      const tasks = taskManager.getAllTasks();
+      expect(tasks[0].project).toBe(project);
+      expect(tasks[0].status).toBe(TaskStatus.PROJECT_TASK);
+
+      const projects = taskManager.getAllProjects();
+      expect(projects).toHaveLength(1);
+      expect(projects[0]).toBe(project);
+    });
   });
 
   describe("getAllTasks", () => {
@@ -177,6 +280,95 @@ describe("TaskManager", () => {
       expect(result.projects).toHaveLength(1);
       expect(result.tasks[0].id).toBe("task1");
       expect(result.projects[0].id).toBe("project1");
+    });
+  });
+
+  describe("printSummary", () => {
+    test("should log task summary when tasks exist", () => {
+      // Setup - mock console.log
+      const originalConsoleLog = console.log;
+      console.log = jest.fn();
+
+      // Create tasks with different statuses and projects
+      const project1 = new Project({ id: "project1", name: "Project 1" });
+      const inboxTask = new Task({
+        id: "task1",
+        description: "Inbox task",
+        status: TaskStatus.INBOX,
+      });
+      const projectTask = new Task({
+        id: "task2",
+        description: "Project task",
+        status: TaskStatus.PROJECT_TASK,
+        project: project1,
+      });
+
+      // Load tasks
+      taskManager.loadTasks([inboxTask, projectTask]);
+
+      // Add project to manager's internal map
+      const projectsMap = new Map<string, Project>();
+      projectsMap.set(project1.id, project1);
+      (taskManager as any).projects = projectsMap;
+
+      // Execute
+      taskManager.printSummary();
+
+      // Verify console.log was called multiple times
+      expect(console.log).toHaveBeenCalled();
+
+      // Restore console.log
+      console.log = originalConsoleLog;
+    });
+
+    test("should log message when no tasks exist", () => {
+      // Setup - mock console.log
+      const originalConsoleLog = console.log;
+      console.log = jest.fn();
+
+      // Execute with no tasks loaded
+      taskManager.printSummary();
+
+      // Verify console.log was called with "No tasks loaded or processed"
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("No tasks loaded or processed"),
+      );
+
+      // Restore console.log
+      console.log = originalConsoleLog;
+    });
+
+    test("should handle different groupBy parameters", () => {
+      // Setup - mock console.log
+      const originalConsoleLog = console.log;
+      console.log = jest.fn();
+
+      // Create tasks with different contexts and eisenhower quadrants
+      const task1 = new Task({
+        id: "task1",
+        description: "Important task",
+        context: "@work",
+        eisenhowerQuadrant: EisenhowerQuadrant.DO,
+      });
+      const task2 = new Task({
+        id: "task2",
+        description: "Less important task",
+        context: "@home",
+        eisenhowerQuadrant: EisenhowerQuadrant.DECIDE,
+      });
+
+      // Load tasks
+      taskManager.loadTasks([task1, task2]);
+
+      // Execute with different groupBy parameters
+      taskManager.printSummary("context");
+      taskManager.printSummary("priority");
+
+      // Verify console.log was called with appropriate groupings
+      expect(console.log).toHaveBeenCalled();
+
+      // Restore console.log
+      console.log = originalConsoleLog;
     });
   });
 });

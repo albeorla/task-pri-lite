@@ -5,7 +5,7 @@
  */
 
 import { BaseInputItem } from "../abstracts/base-classes";
-import { InputSource, ItemNature } from "../core/interfaces";
+import { InputSource, ItemNature } from "../core/types/enums";
 
 /**
  * Input item for manual task entry
@@ -31,14 +31,6 @@ export class ManualTaskInputItem extends BaseInputItem {
       dueDate,
       priority,
     });
-    this.source = InputSource.MANUAL_ENTRY;
-    this.rawContent = {
-      title,
-      description,
-      dueDate,
-      priority,
-    };
-    this.timestamp = new Date();
   }
 
   /**
@@ -70,12 +62,6 @@ export class TextInputItem extends BaseInputItem {
       text,
       title,
     });
-    this.source = source;
-    this.rawContent = {
-      text,
-      title,
-    };
-    this.timestamp = new Date();
   }
 
   /**
@@ -157,16 +143,6 @@ export class MeetingNoteInputItem extends TextInputItem {
     public date: Date | null = null,
   ) {
     super(notes, meetingTitle, InputSource.MEETING_NOTES);
-
-    // Initialize rawContent with all properties
-    this.rawContent = {
-      text: notes,
-      title: meetingTitle,
-      attendees: attendees,
-      date: date,
-    };
-    this.source = InputSource.MEETING_NOTES;
-    this.timestamp = new Date();
   }
 
   /**

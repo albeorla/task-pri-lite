@@ -9,7 +9,43 @@ import {
   IProcessedItem,
   IInputProcessor,
 } from "../core/interfaces";
-import { ItemNature, DestinationType } from "../core/types/enums";
+import { ItemNature, DestinationType, InputSource } from "../core/types/enums";
+
+/**
+ * Abstract base class for input items
+ */
+export abstract class BaseInputItem implements IInputItem {
+  /**
+   * The source of the input
+   */
+  public source: InputSource;
+
+  /**
+   * The raw content of the input (could be string, file path, etc.)
+   */
+  public rawContent: any;
+
+  /**
+   * The timestamp when the input was received
+   */
+  public timestamp: Date;
+
+  /**
+   * Constructs a new BaseInputItem
+   * @param source The source of the input
+   * @param rawContent The raw content of the input
+   */
+  constructor(source: InputSource, rawContent: any) {
+    this.source = source;
+    this.rawContent = rawContent;
+    this.timestamp = new Date();
+  }
+
+  /**
+   * Guesses the potential nature of the item based on source/content
+   */
+  public abstract getPotentialNature(): ItemNature;
+}
 
 /**
  * Abstract base class for input processors
