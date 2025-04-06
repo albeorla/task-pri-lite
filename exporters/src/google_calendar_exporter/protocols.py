@@ -14,6 +14,7 @@ GoogleCredentials = Any
 # Result type aliases
 CalendarEventResult = dict[str, list[Event]]  # Calendar Name -> List of Events
 TaskResult = list[Task]  # List of tasks derived from events
+FilteredEventResult = dict[str, Any]  # Structure for filtered events with metadata
 
 
 class Authenticator(Protocol):
@@ -71,4 +72,16 @@ class TaskFormatter(Protocol):
 
     def save_to_file(self, formatted_data: str, file_path: str) -> None:
         """Saves the formatted string data to a file."""
+        ...
+
+
+class EventFilter(Protocol):
+    """Protocol for filtering calendar events."""
+    
+    def filter_events(self, events: CalendarEventResult) -> FilteredEventResult:
+        """Filters events based on specific criteria and returns filtered results with metadata."""
+        ...
+    
+    def save_filtered_events(self, filtered_data: FilteredEventResult, file_path: str) -> None:
+        """Saves the filtered events data to a file."""
         ...

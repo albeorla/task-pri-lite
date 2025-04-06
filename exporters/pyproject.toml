@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "planning-data-exporter"
+package-mode = false
 version = "0.1.0"
 description = "A hierarchical exporter for planning data"
 authors = ["Albert J. Orlando <albertjorlando+github@gmail.com>"]
@@ -24,6 +25,7 @@ google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^1.0.0"
 python-dateutil = "^2.9.0.post0"
 jsonschema = "^4.21.1"
+anthropic = "^0.49.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.0"

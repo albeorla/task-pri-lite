@@ -32,3 +32,5 @@ Thumbs.db
 # Project specific files
 output/
 project.txt
+exporters/bin/client_secret.json
+exporters/bin/google-token.json

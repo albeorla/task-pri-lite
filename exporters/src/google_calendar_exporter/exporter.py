@@ -13,7 +13,9 @@ from google_calendar_exporter.protocols import (
     ApiClient,
     Authenticator,
     CalendarEventResult,
+    EventFilter,
     EventFormatter,
+    FilteredEventResult,
     Processor,
     RawCalendarData,
     TaskFormatter,
@@ -36,6 +38,7 @@ class GoogleCalendarExporter:
         task_formatter: TaskFormatter,
         planning_processor: PlanningProcessor | None = None,
         planning_formatter: PlanningJsonFormatter | None = None,
+        event_filter: EventFilter | None = None,
     ):
         self.config = config
         self.auth_manager = auth_manager
@@ -45,9 +48,11 @@ class GoogleCalendarExporter:
         self.task_formatter = task_formatter
         self.planning_processor = planning_processor or PlanningProcessor()
         self.planning_formatter = planning_formatter or PlanningJsonFormatter()
+        self.event_filter = event_filter  # Optional event filter
         self.calendar_events: CalendarEventResult = {}
         self.tasks: TaskResult = []
         self.planning_calendars: list[PlanningCalendar] = []
+        self.filtered_events: FilteredEventResult | None = None
 
     # No longer needed as api_client is initialized externally and injected
     # def _initialize_api_client(self): ...
@@ -142,8 +147,33 @@ class GoogleCalendarExporter:
                 )
             ]
 
-    def export_data(self) -> tuple[str | None, str | None, str | None]:
-        """Runs the full export process. Returns tuple of (events_json, tasks_json, planning_json) or (None, None, None) on failure."""
+    def filter_events(self) -> FilteredEventResult | None:
+        """Filters calendar events using the event filter if available."""
+        if not self.event_filter:
+            logger.warning("No event filter available. Skipping event filtering.")
+            return None
+            
+        try:
+            logger.info("Starting event filtering...")
+            self.filtered_events = self.event_filter.filter_events(self.calendar_events)
+            
+            # Save filtered events if output file is specified
+            if hasattr(self.config, "FILTERED_EVENTS_OUTPUT_FILE") and self.config.FILTERED_EVENTS_OUTPUT_FILE:
+                self.event_filter.save_filtered_events(
+                    self.filtered_events, self.config.FILTERED_EVENTS_OUTPUT_FILE
+                )
+                logger.info(f"Filtered events saved to: {self.config.FILTERED_EVENTS_OUTPUT_FILE}")
+                
+            return self.filtered_events
+        except Exception as e:
+            logger.error(f"Error during event filtering: {e}")
+            return None
+
+    def export_data(self) -> tuple[str | None, str | None, str | None, FilteredEventResult | None]:
+        """Runs the full export process. 
+        
+        Returns tuple of (events_json, tasks_json, planning_json, filtered_events) or (None, None, None, None) on failure.
+        """
         logger.info("Starting Google Calendar export process...")
         try:
             # Authentication is handled externally before api_client is created/injected
@@ -163,7 +193,7 @@ class GoogleCalendarExporter:
                 self.planning_formatter.save_to_file(
                     planning_json, self.config.PLANNING_OUTPUT_FILE
                 )
-                return events_json, tasks_json, planning_json
+                return events_json, tasks_json, planning_json, None
 
             # 2. Fetch and Process Events for Each Calendar
             self.calendar_events = {}  # Reset data for this run
@@ -181,14 +211,21 @@ class GoogleCalendarExporter:
             self.event_formatter.save_to_file(events_json, self.config.EVENTS_OUTPUT_FILE)
             self.task_formatter.save_to_file(tasks_json, self.config.TASKS_OUTPUT_FILE)
             self.planning_formatter.save_to_file(planning_json, self.config.PLANNING_OUTPUT_FILE)
+            
+            # 5. Apply event filtering if available
+            filtered_events = None
+            if self.event_filter:
+                filtered_events = self.filter_events()
 
             logger.info("Google Calendar export process completed successfully.")
             logger.info(f"Events saved to: {self.config.EVENTS_OUTPUT_FILE}")
             logger.info(f"Tasks saved to: {self.config.TASKS_OUTPUT_FILE}")
             logger.info(f"Planning data saved to: {self.config.PLANNING_OUTPUT_FILE}")
-            return events_json, tasks_json, planning_json  # Return all JSON strings
+            if filtered_events:
+                logger.info(f"Filtered events saved to: {getattr(self.config, 'FILTERED_EVENTS_OUTPUT_FILE', 'N/A')}")
+            return events_json, tasks_json, planning_json, filtered_events  # Return all results
 
         except Exception:
             # Log the full traceback for detailed debugging
             logger.exception("An error occurred during the export process.")
-            return None, None, None  # Indicate failure
+            return None, None, None, None  # Indicate failure

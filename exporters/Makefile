@@ -1,4 +1,4 @@
-.PHONY: build check check-log clean clean-venv format help install lint lint-fix mypy run shell test test-cov export-all export-todoist export-gcal
+.PHONY: build check check-log clean clean-venv format help install lint lint-fix mypy run shell test test-cov export-all export-todoist export-gcal export-gcal-filtered
 
 # ============================================================================== #
 #                              Setup & Environment                             #
@@ -59,6 +59,13 @@ export-todoist: ## Run only the Todoist data exporter
 export-gcal: ## Run only the Google Calendar data exporter
 	@echo "Running Google Calendar data exporter..."
 	poetry run planning-export -e gcal
+
+export-gcal-filtered: ## Run the Google Calendar data exporter with event filtering
+	@echo "Running Google Calendar data exporter with event filtering..."
+	@mkdir -p output
+	poetry run planning-export -e gcal
+	@echo "Starting event filtering with concurrent batch processing..."
+	poetry run python -c "import sys; sys.path.append('./src'); from google_calendar_exporter.main import main; sys.argv = ['gcal-export', '--filter-events', '--batch-size', '15', '--max-concurrent-batches', '4']; main()" || echo "Filtering process ended. Check output directory for exported files."
 
 # ============================================================================== #
 #                              Build & Cleanup                                 #

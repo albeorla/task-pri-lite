@@ -22,7 +22,7 @@ def import_todoist_export():
 
 def import_gcal_export():
     try:
-        from google_calendar_exporter.main import run_export as gcal_export
+        from google_calendar_exporter.main import main as gcal_export
         return gcal_export
     except ImportError as e:
         console.print(f"[bold red]Error importing Google Calendar exporter: {e}[/bold red]")
